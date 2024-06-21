@@ -1,4 +1,4 @@
-# AUTHn - A Streamlit Authentication Demonstration Application
+# AUTHn! - A Streamlit Authentication Demonstration Application
 
 
 ## Prerequisites
@@ -7,6 +7,30 @@
 Python 3.12.4
 Editor of choice
 
+
+## Running AUTHn!
+
+
+After downloading the repository, the .env file needs to be created if 
+testing OAuth 2 authentication. See the `Historical Documentation` section 
+for details on how to create the .env file. 
+
+If testing username/password authentication see the `Historical Documentation` 
+on how to change app.py.
+
+Create a python virtual environment in the same directory as the repository 
+download. See `Historical Documentation`.
+
+With the virtual environment active run the following command to install 
+the python dependencies:
+
+    pip install -r requirements.txt
+
+
+After making these changes; run the following command to start AUTHn!:
+
+    streamlit run ./src/app/app.py
+    
 
 # Historical Documentation
 ---
@@ -95,7 +119,8 @@ if __name__ == "__main__":
     main()
 `
 
-This application is now runnable. Run the following to start the application:
+AUTHn! is now runnable. Run the following command to start the 
+the server:
 
 
 Ensure the virtual environment is activated prior to launching Streamlit.
