@@ -1,0 +1,21 @@
+cookie:
+  expiry_days: 30
+  key: 94c39d787d1601c961f6ad5f8a0b55dc10501742a5d5a19e27243527e97054e6
+  name: streamlit_app_1489
+credentials:
+  usernames:
+    testuser1489:
+      email: testuser1489@proton.me
+      name: Test User 1489
+      failed_login_attempts: 0
+      logged_in: false
+      password: $2b$12$rRVtcGEOxD.D9bKNcun/s.YLTVhugdomuuI5LY05B1hnjSS3PoL1C
+    testuser1490:
+      email: testuser1489@proton.me
+      name: Test User 1490
+      failed_login_attempts: 0
+      logged_in: false
+      password: $2b$12$X0vhuP9pMyK/EPWEjRirEufklw.le8qWpXWTr4dVDqwTiTR671EPm
+pre-authorized:
+  emails:
+  - mkonrad@raknod.net
