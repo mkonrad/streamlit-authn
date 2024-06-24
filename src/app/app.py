@@ -27,7 +27,7 @@ st.set_page_config(
     page_title="AUTHn!",
     page_icon=logo,
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
     menu_items={
         'Get Help': cu.get_help_url()
     }
@@ -36,6 +36,7 @@ st.set_page_config(
 def main():
     st.logo(logo)
     st.header('Welcome to AUTHn!')
+    st.write('A Streamlit authentication demonstration application.')
     authenticator = au.initialize_token_authenticator()
     au.confirm_token_session(authenticator)
 

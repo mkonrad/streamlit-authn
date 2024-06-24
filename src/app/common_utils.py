@@ -18,13 +18,20 @@ import os
 import streamlit as st
 
 from dotenv import load_dotenv
+from dotenv import dotenv_values
 from streamlit.logger import get_logger
 
 logger = get_logger(__name__)
 
 def initialize():
     # Load environment variables from .env file
-    load_dotenv()
+    #load_dotenv()
+
+    env_file = os.path.join(app_dir(), '.env')
+
+    # Load environment to config
+    config = dotenv_values(env_file)
+    st.session_state.config = config
 
     # Initialize State 
     st.session_state.logout = False
