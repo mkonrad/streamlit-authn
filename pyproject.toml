@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "authnyc"
+version = "0.1.0"
+authors = [
+    { name = "Michael Konrad", email = "mkonrad@aviumlabs.com" }
+]
+description = "A Streamlit authentication demonstration application."
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[tools.hatch.build.targets.wheel.sources]
+"src/authnyc" = "authnyc"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/authnyc"]
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::DeprecationWarning",
+]
