@@ -24,11 +24,15 @@ logger = logging.getLogger(__name__)
 
 def initialize():
     config = initialize_config()
-    if validate_config(config):
-        st.session_state.config = config
+    try: 
+        if validate_config(config):
+            st.session_state.config = config
 
-    # Initialize State 
-    st.session_state.logout = False
+            # Initialize State 
+            st.session_state.logout = False
+            return True
+    except RuntimeError as e:
+        raise e
 
 
 def initialize_config():
@@ -53,14 +57,17 @@ def validate_config(config):
     if config is not None:
         keys = list(config.keys())
 
-        if validate_keys_list(keys):
-            for item in config.values():
-                if item is None:
-                    return False
-        else:
-            return False
-        return True
-    
+        try: 
+            if validate_keys_list(keys):
+                for item in config.values():
+                    if item is None:
+                        raise RuntimeError("OIDC configuration is missing or incomplete.")
+            else:
+                return False
+            return True
+        except RuntimeError as e:
+            raise e
+        
     return False
     
 
@@ -87,7 +94,7 @@ def validate_keys_list(config_keys):
     if config_keys == required_keys:
         return True
     
-    return False
+    raise RuntimeError("OIDC configuration is missing or invalid.")
 
 
 # Utility method to determine where the application is running from.
