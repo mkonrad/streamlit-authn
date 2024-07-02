@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 logo = cu.get_png_logo()
 
 st.set_page_config(
-    page_title="AUTHn!",
+    page_title="Authnyc",
     page_icon=logo,
     layout="wide",
     initial_sidebar_state="expanded",
@@ -35,12 +35,13 @@ st.set_page_config(
 
 def main(msg):
     st.logo(logo)
-    st.header('Welcome to AUTHn!')
+    st.header('Welcome to Authnyc!')
     st.write('A Streamlit authentication demonstration application.')
     st.write(msg)
     if st.session_state.valid_oidc:
-        authenticator = au.initialize_token_authenticator()
-        au.confirm_token_session(authenticator)
+        #authenticator = au.initialize_token_authenticator()
+        #au.confirm_token_authenticator(authenticator)
+        
 
 
 if __name__ == "__main__":
@@ -49,6 +50,7 @@ if __name__ == "__main__":
         st.session_state.valid_oidc = True
     try: 
         cu.initialize()
+        au.initialize_token_session()
     except RuntimeError as e:
         msg = str(e)
         st.session_state.valid_oidc = False

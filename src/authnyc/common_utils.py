@@ -20,7 +20,9 @@ import streamlit as st
 
 from dotenv import dotenv_values
 
-logger = logging.getLogger(__name__)
+from streamlit.logger import get_logger
+
+logger = get_logger(__name__)
 
 def initialize():
     config = initialize_config()
@@ -61,7 +63,7 @@ def validate_config(config):
             if validate_keys_list(keys):
                 for item in config.values():
                     if item is None:
-                        raise RuntimeError("OIDC configuration is missing or incomplete.")
+                        raise RuntimeError("OIDC configuration is incomplete.")
             else:
                 return False
             return True
@@ -90,11 +92,13 @@ def validate_keys_list(config_keys):
 
     required_keys.sort()
     config_keys.sort()
+    logger.info("Required keys...%s", required_keys)
+    logger.info("Configur keys...%s", config_keys)
 
     if config_keys == required_keys:
         return True
     
-    raise RuntimeError("OIDC configuration is missing or invalid.")
+    raise RuntimeError("OIDC configuration missing or invalid.")
 
 
 # Utility method to determine where the application is running from.
