@@ -1,0 +1,9 @@
+[theme]
+base="light"
+primaryColor="#0079c2"
+secondaryBackgroundColor="#92d3f5"
+
+[server]
+#port=8443
+#sslCertFile='/path/to/ssl/certificate'
+#sslKeyFile='/path/to/ssl/private/key'

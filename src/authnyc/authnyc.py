@@ -24,7 +24,7 @@ logger = get_logger(__name__)
 logo = cu.get_png_logo()
 
 st.set_page_config(
-    page_title="AUTHn!",
+    page_title="Authnyc",
     page_icon=logo,
     layout="wide",
     initial_sidebar_state="expanded",
@@ -35,7 +35,7 @@ st.set_page_config(
 
 def main(msg):
     st.logo(logo)
-    st.header('Welcome to AUTHn!')
+    st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
     st.write('A Streamlit authentication demonstration application.')
     st.write(msg)
     if st.session_state.valid_oidc:
