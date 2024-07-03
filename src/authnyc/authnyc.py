@@ -40,7 +40,7 @@ def main(msg):
     st.write(msg)
     if st.session_state.valid_oidc:
         authenticator = au.initialize_token_authenticator()
-        au.confirm_token_session(authenticator)
+        au.confirm_token(authenticator)
 
 
 if __name__ == "__main__":

@@ -14,13 +14,13 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import logging
 import os
 import streamlit as st
 
 from dotenv import dotenv_values
+from streamlit.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 def initialize():
     config = initialize_config()
