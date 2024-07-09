@@ -1,6 +1,10 @@
 # Apple
 .DS_Store
 
+# Authnyc Specific
+user_store.*
+*.log
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
