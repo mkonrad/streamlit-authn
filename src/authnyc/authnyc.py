@@ -1,4 +1,4 @@
-# app.py 
+# authnyc.py 
 # Description: A Streamlit authentication demonstration application
 # Copyright 2024 Michael Konrad 
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,41 +14,34 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import auth_utils as au
 import common_utils as cu
 import streamlit as st
 
-from streamlit.logger import get_logger
-
-logger = get_logger(__name__)
-logo = cu.get_png_logo()
-
-st.set_page_config(
-    page_title="Authnyc",
-    page_icon=logo,
-    layout="wide",
-    initial_sidebar_state="expanded",
-    menu_items={
-        'Get Help': cu.get_help_url()
-    }
-)
+from auth_utils import initialize_token_authenticator
+from navigation import make_sidebar
 
 def main(msg):
-    st.logo(logo)
+    make_sidebar()
+    
     st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
-    st.write('A Streamlit authentication demonstration application.')
-    st.write(msg)
-    if st.session_state.valid_oidc:
-        authenticator = au.initialize_token_authenticator()
-        au.confirm_token(authenticator)
+    if 'authenticated' not in st.session_state:
+        st.write('A Streamlit authentication demonstration application.')
+        st.write(msg)
+
+    if 'authenticated' in st.session_state:
+        st.write(f'Welcome *{st.session_state.user_record['name']}*')
+        st.write('Bringing some :sun_with_face:')
+        st.write(st.session_state['token'])
 
 
 if __name__ == "__main__":
     msg = "OIDC configured successfully."
-    if 'valid_oidc' not in st.session_state:
-        st.session_state.valid_oidc = True
+    
     try: 
         cu.initialize()
+        initialize_token_authenticator()
+        if 'valid_oidc' not in st.session_state:
+            st.session_state.valid_oidc = True
     except RuntimeError as e:
         msg = str(e)
         st.session_state.valid_oidc = False

@@ -14,23 +14,35 @@
 # limitations under the License.
 # Date: 2024-07-02
 
-import persistent
-import persistent.list
 import uuid
 
-class AuthnycUser(persistent.Persistent):
-    def __init__(self, user):
-        if user['email'] is None:
-            raise RuntimeError("Missing required attribute email address.")
+
+def create_user_record(name, email, sub, given_name, family_name,  
+                       phone_number, linked_account):
+    """
+    Create a new user database record. 
+
+    Args:
+        name: required - the full name of the account to be created
+        email: required - the email address of the account to be created
+        sub: required - the primary identity provider of this account
+        given_name: the first name of the account to be created
+        family_name: the last name of the account to be created
+        phone_number: the phone number of the account to be created
+        linked_account: an alternate identity provider account to be linked 
+                          to this account
         
-        self.id = uuid.uuid4()
-        self.name = user['name']
-        self.given_name = user['given_name']
-        self.family_name = user['family_name']
-        self.email = user['email']
-        self.phone_number = user['phone_number']
-        self.linked_accounts = persistent.list.PersistentList()
+        The following metadata will be generated: unique ID (UUIDv4),  
+        inserted_at and updated_at  timestamps. 
 
+    Returns: 
+        The user record ready to be inserted into the TinyDB user store.
+    """
+    
+    # name and email address are required
+    if name is None and email is None and sub is None:
+        raise RuntimeError("Name, email address, and identity provider are required attributes.")
+    
+    # Generate UUID and insert_at timestamp
+    
 
-    def add_linked_account(self, account):
-        self.linked_accounts.append(account)

@@ -1,5 +1,6 @@
 # Authnyc Specific
-user_store.f*
+user_store.*
+*.log
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -18,11 +18,10 @@ import os
 import streamlit as st
 
 from dotenv import dotenv_values
-from streamlit.logger import get_logger
-
-logger = get_logger(__name__)
+from loguru import logger
 
 def initialize():
+    initialize_logger()
     config = initialize_config()
     try: 
         if validate_config(config):
@@ -30,6 +29,7 @@ def initialize():
 
             # Initialize State 
             st.session_state.logout = False
+            
             return True
     except RuntimeError as e:
         raise e
@@ -41,6 +41,13 @@ def initialize_config():
 
     # Load environment to config
     return dotenv_values(env_file)
+
+
+def initialize_logger():
+    logname = "authnyc.log"
+    log_path = os.path.join(app_dir(), logname)
+
+    logger.add(log_path)
 
 
 def validate_config(config):

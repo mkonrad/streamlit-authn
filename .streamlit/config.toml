@@ -3,6 +3,9 @@ base="light"
 primaryColor="#0079c2"
 secondaryBackgroundColor="#92d3f5"
 
+[client]
+showSidebarNavigation = false
+
 [server]
 #port=8443
 #sslCertFile='/path/to/ssl/certificate'
