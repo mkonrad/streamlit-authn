@@ -14,21 +14,14 @@
 # limitations under the License.
 # Date: 2024-07-05
 
+import profile_edit as pe
 import streamlit as st
 
 from navigation import make_sidebar
 
 make_sidebar()
 
-st.header("My Profile :standing_person:")
-
-if 'user_record' in st.session_state:
-    user_record = st.session_state.user_record
-
-    container = st.container(border=True)
-    container.write(f'**Name** &nbsp;&nbsp; {user_record['name']}')
-    container.write(f'**Nickname** &nbsp;&nbsp; {user_record['nickname']}')
-    container.write(f'**First name** &nbsp;&nbsp; {user_record['given_name']}')
-    container.write(f'**Last name** &nbsp;&nbsp; {user_record['family_name']}')
-    container.write(f'**Email address** &nbsp;&nbsp; {user_record['email']}')
-    container.write(f'**Phone number** &nbsp;&nbsp; {user_record['phone_number']}')
+if 'FormSubmitter:user_profile-Edit' in st.session_state:
+    pe.present_profile_form_enabled()
+else:
+    pe.present_profile_form_disabled()
