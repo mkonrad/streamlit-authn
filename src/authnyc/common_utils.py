@@ -30,7 +30,10 @@ def initialize():
             # Initialize State 
             st.session_state.logout = False
             
-            return True
+            if config['EDIT_PROFILE']:
+                api_config = initialize_api_config()
+                st.session_state.api_config = api_config
+
     except RuntimeError as e:
         raise e
 
@@ -38,6 +41,14 @@ def initialize():
 def initialize_config():
     # Load environment variables from .env file
     env_file = os.path.join(app_dir(), '.env')
+
+    # Load environment to config
+    return dotenv_values(env_file)
+
+
+def initialize_api_config():
+    # Load environment variables from .env file
+    env_file = os.path.join(app_dir(), '.apienv')
 
     # Load environment to config
     return dotenv_values(env_file)

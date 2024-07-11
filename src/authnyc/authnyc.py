@@ -14,9 +14,9 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import common_utils as cu
 import streamlit as st
 
+from common_utils import initialize
 from auth_utils import initialize_token_authenticator
 from navigation import make_sidebar
 
@@ -26,7 +26,10 @@ def main(msg):
     st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
     if 'authenticated' not in st.session_state:
         st.write('A Streamlit authentication demonstration application.')
-        st.write(msg)
+        if st.session_state.valid_oidc == False:
+            st.write(f'Status: :red[{msg}]')
+        else:
+            st.write(f'Status: :green[{msg}]')
 
     if 'authenticated' in st.session_state:
         st.write(f'Welcome *{st.session_state.user_record['name']}*')
@@ -35,10 +38,10 @@ def main(msg):
 
 
 if __name__ == "__main__":
-    msg = "OIDC configured successfully."
+    msg = "OIDC configured successfully!"
     
     try: 
-        cu.initialize()
+        initialize()
         initialize_token_authenticator()
         if 'valid_oidc' not in st.session_state:
             st.session_state.valid_oidc = True

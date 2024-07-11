@@ -16,13 +16,13 @@
 # This code is modified from streamlit-login example:
 #   https://github.com/blackary/streamlit-login
 
-import auth_utils as au
 import streamlit as st
 
 from flask import redirect
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit.source_util import get_pages
 from urllib.parse import quote_plus, urlencode
+from user_utils import login
 from loguru import logger
 
 def get_current_page_name():
@@ -41,7 +41,7 @@ def make_sidebar():
         st.write()
         st.write()
 
-        au.login()
+        login()
 
         if st.session_state.get("authenticated", False):
             logger.debug("Authenticated user in session state...{}", st.session_state.user_record)

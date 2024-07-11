@@ -21,7 +21,14 @@ from navigation import make_sidebar
 
 make_sidebar()
 
-if 'FormSubmitter:user_profile-Edit' in st.session_state:
+if 'FormSubmitter:user_profile-Edit' in st.session_state and \
+    st.session_state['FormSubmitter:user_profile-Edit'] == True:
     pe.present_profile_form_enabled()
 else:
     pe.present_profile_form_disabled()
+    
+if 'FormSubmitter:user_sensitive_profile-Edit' in st.session_state and \
+    st.session_state['FormSubmitter:user_sensitive_profile-Edit'] == True:
+    pe.present_sensitive_profile_form_enabled()
+else:
+    pe.present_sensitive_profile_form_disabled()

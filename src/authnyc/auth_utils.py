@@ -14,19 +14,20 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import user_utils as uu
-import common_utils as cu
 import os
 import streamlit as st
 import streamlit_authenticator as stauth
 import yaml
 
+from auth0.authentication import GetToken
+from auth0.management import Auth0
+from common_utils import app_dir
 from loguru import logger
-from streamlit_oauth import OAuth2Component, StreamlitOauthError
+from streamlit_oauth import OAuth2Component
 from yaml.loader import SafeLoader
 
 def initialize_creds_authenticator():
-    wd = cu.app_dir()
+    wd = app_dir()
     config_file = r'creds_authenticator.yaml'
     auth_config_path = os.path.join(wd, config_file)
 
@@ -83,38 +84,25 @@ def initialize_token_authenticator():
     return None
  
 
-def login():
-    if 'authenticator' in st.session_state:
-        authenticator = st.session_state.authenticator
-        redirect_uri = st.session_state.redirect_uri
+def initialize_auth0_api_authenticator():
+    # Coniugration is initialized in common_utils.py 
+    if st.session_state.api_config:
+        api_config = st.session_state.api_config
 
-        if 'token' not in st.session_state:
-            result = authenticator.authorize_button(
-                name='Log in with Auth0',
-                icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
-                redirect_uri=redirect_uri,
-                scope="openid email profile",
-                key='auth0_login_btn',
-                extras_params={"prompt": "consent", "access_type": "offline"}
-            )
+        if 'API_DOMAIN' in api_config:
+            API_DOMAIN = api_config['API_DOMAIN']
+        if 'API_CLIENT_ID' in api_config:
+            API_CLIENT_ID = api_config['API_CLIENT_ID']
+        if 'API_CLIENT_SECRET' in api_config:
+            API_CLIENT_SECRET = api_config['API_CLIENT_SECRET']
+        if 'API_AUDIENCE' in api_config:
+            API_AUDIENCE = api_config['API_AUDIENCE']
 
-            if result and 'token' in result:
-                logger.debug("Authentication result...{}", result)
-                st.session_state.token = result.get('token')
-                verify_authentication()
-                st.rerun()
-    
+        get_token = GetToken(API_DOMAIN, API_CLIENT_ID, 
+                             client_secret=API_CLIENT_SECRET)
+        token = get_token.client_credentials(API_AUDIENCE.format(API_DOMAIN))
+        mgmt_api_token = token['access_token']
+        
+        auth0 = Auth0(API_DOMAIN, mgmt_api_token)
 
-def verify_authentication():
-    if 'token' in st.session_state:
-        #result = st.session_state.auth_result
-        #del st.session_state.auth_result
-               
-        id_token = st.session_state.token["id_token"]  
-        user_record = uu.adduser(id_token)
-
-        if 'user_record' not in st.session_state:
-            st.session_state.user_record = user_record
-
-        if 'authenticated' not in st.session_state:
-            st.session_state.authenticated = True
+        return auth0
