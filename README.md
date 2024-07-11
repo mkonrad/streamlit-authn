@@ -1,4 +1,4 @@
-# AUTHn! - A Streamlit Authentication Demonstration Application
+# Authnyc! - A Streamlit Authentication Demonstration Application
 
 
 ## OS Prerequisites
@@ -21,7 +21,7 @@ This configuration requires an OAuth 2 service provider. This setup will
 cover the use of Auth0. Visit `https://auth0.com` to create an account. 
 
 
-### Create Auth0 Application Definition
+### Create Auth0 Application
 
 
 1. Login to the Auth0 Dashboard
@@ -32,12 +32,12 @@ cover the use of Auth0. Visit `https://auth0.com` to create an account.
   c. Select Create
 4. Select Python for `What technology are you using for your project?`
 
-1. Select Settings
-2. Update Allowed Callback URLs
+5. Select Settings
+6. Update Allowed Callback URLs
   a. http://localhost:8501
-3. Update Allowed Logout URLs
+7. Update Allowed Logout URLs
   a. http://localhost:8501
-4. Select Save Changes
+8. Select Save Changes
 
 
 The following information will be used to create the .env file for 
@@ -77,14 +77,16 @@ REVOKE_TOKEN_URL=https://<auth0_domain_url>/oauth/revoke
 CLIENT_ID=<AUTH0_CLIENT_ID>
 CLIENT_SECRET=<AUTH0_CLIENT_SECRET>
 LOGOUT_URL=https://<auth0_domain_url>/v2/logout
+REDIRECT_URI=http(s)://<app_fqdn:port>
+EDIT_PROFILE=True
 `
 
 
-## Running AUTHn!
+## Running Authnyc!
 
 
 First time run; create a python virtual environment in the root directory of 
-AUTHn!.
+Authnyc!.
 
 See the `Historical Documentation` section for details on the virtual 
 environment.
@@ -94,16 +96,70 @@ environment.
 
 1. Activate Virtual Environment
 
+Windows:
+
     .\venv\Scripts\Activate.ps1
+
+
+macOS:
+
+    . ./venv/bin/activate
+
 
 2. Install Dependencies
 
     pip install -r requirements.txt
 
 
-3. Run the following command to start AUTHn!:
+3. Run the following command to start Authnyc!:
 
     streamlit run ./src/authnyc/authnyc.py
+
+
+## Authnyc User Profile
+
+
+User profile support has been added to Authnyc!. 
+
+To support editing `My Profile`, a Machine to Machine application needs to be 
+configured in Auth0 and a .apienv file is added to Authnyc in the 
+`src/authnyc` directory. 
+
+
+### Create Auth0 Machine to Machine Application
+
+ 
+1. Login to Auth0 Dashboard 
+2. Select Applications -> Applications 
+3. Select Create Application 
+4. Set Application Name 
+5. Select Machine to Machine Applications 
+6. Select Create  
+7. Select API 
+8. Select the following scopes: 
+  a. read:users 
+  b. update:users 
+  c. create:users 
+  d. read:users_app_metadata 
+  e. update:users_app_metadata 
+  f. create:users_app_metadata 
+9. Select Authorize 
+
+
+### Update API (Machine to Machine) Environment File
+
+
+Update the .apienv file as per your Auth0 Machine to Machine configuration:
+
+`
+API_DOMAIN=<your_auth0_api_domain>
+API_CLIENT_ID=<your_auth0_api_client_id>
+API_CLIENT_SECRET=<your_auth0_api_client_secret>
+API_AUDIENCE=https://<your_auth0_api_domain>/api/v2/
+`
+
+After updating the .env and .apienv files uncomment these settings in the 
+`.gitignore` file so your secrets are not copied to version control. 
     
 
 # Historical Documentation
@@ -142,48 +198,10 @@ macOS:
     . ./venv/bin/activate
 
 
-## Install Python Dependencies 
-
-This is a historical note for starting development, it is replaced by the 
-`pip install -r requirements.txt` step. 
-
-
-    pip install flask
-    pip install streamlit
-    pip install streamlit-authenticator
-    pip install streamlit-oauth
-    
-
-## Create Application Directory Structure
-
-
-    mkdir -p src/app/images
-
-    mkdir src/app/docs
-
-    mkdir src/app/.streamlit
-    
-
-## Application Entrypoint
-
-
-    src/app/app.py
-
-
-## Add a Common Utilities module
-
-
-General application wide utility module.
-
-
-    src/app/common_utils.py
-
-
 ## Logos
 
 
 Copy application specific logos to the src/app/images directory.
-
 
 
 ## Set Some Streamlit Defaults
@@ -191,7 +209,7 @@ Copy application specific logos to the src/app/images directory.
 
 Edit 
 
-    src/app/.streamlit/config.toml
+    .streamlit/config.toml
 
 
 `
@@ -272,16 +290,7 @@ preauthorized:
 ` 
 
 
-## Authentication Utility
-
-
-A utility module for managing authentication.
-
-
-    src/app/auth_utils.py
-
-
-## Update app.py with Basic Authentication
+## Update authnyc.py with Basic Authentication
 
 
 Authentication and session management is done with 2 calls to the auth_utils 
@@ -290,13 +299,13 @@ module:
 
 def main():
     st.logo(logo)
-    st.header('Welcome to AUTHn!')
+    st.header('Welcome to Authnyc!')
 
     __authenticator = au.initialize_creds_authenticator()__
     __au.confirm_creds_session(authenticator)__
 
 
-### Switching app.py for OAuth 2 Initializer and Session
+### Switching authnyc.py for OAuth 2 Initializer and Session (Default)
 
 
 Change the creds_authenticator to the token_authenticator and update 
@@ -305,7 +314,7 @@ creds_session to token_session.
 
 def main():
     st.logo(logo)
-    st.header('Welcome to AUTHn!')
+    st.header('Welcome to Authnyc!')
     
     __authenticator = au.initialize_token_authenticator()__
     __au.confirm_token_session(authenticator)__
