@@ -77,6 +77,9 @@ def initialize_token_authenticator():
         
         if 'authenticator' not in st.session_state:
             st.session_state.authenticator = authenticator
+        else:
+            del st.session_state.authenticator
+            st.session_state.authenticator = authenticator
 
     else:
         st.error('OAuth settings not found.', icon=":material/error:")
