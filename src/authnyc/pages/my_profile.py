@@ -14,7 +14,7 @@
 # limitations under the License.
 # Date: 2024-07-05
 
-import profile_edit as pe
+import authnyc.edit_profile_form as pe
 import streamlit as st
 
 from navigation import make_sidebar

@@ -14,6 +14,7 @@
 # limitations under the License.
 # Date: 2024-06-19
 
+import oidc_form as po
 import streamlit as st
 
 from common_utils import initialize
@@ -26,6 +27,11 @@ def main(msg):
     st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
     if 'authenticated' not in st.session_state:
         st.write('A Streamlit authentication demonstration application.')
+
+        po.present_discovery_form()
+        if 'oidc_disc_url_set' in st.session_state:
+            po.present_api_form()
+
         if st.session_state.valid_oidc == False:
             st.write(f'Status: :red[{msg}]')
         else:
