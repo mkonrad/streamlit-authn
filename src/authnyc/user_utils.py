@@ -17,6 +17,7 @@
 import date_utils as du
 import base64
 import json
+import jwt
 import os
 import uuid
 import streamlit as st
@@ -90,6 +91,7 @@ def login():
     if 'authenticator' in st.session_state:
         authenticator = st.session_state.authenticator
         redirect_uri = st.session_state.redirect_uri
+        config = st.session_state.config
 
         if 'token' not in st.session_state:
             result = authenticator.authorize_button(
@@ -103,7 +105,18 @@ def login():
 
             if result and 'token' in result:
                 logger.debug("Authentication result...{}", result)
-                st.session_state.token = result.get('token')
+                #token = result['token']['access_token']
+                token = result['token']
+
+                # Verify JWT
+                # Algorithm provided in header throws "InvalidAlgorithmError"
+                #token_header_data = jwt.get_unverified_header(token)
+                #logger.debug("Token header data...{}", token_header_data)
+
+                #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
+                #           algorithms=["RS256", ])
+                
+                st.session_state.token = token
                 verify_authentication()
                 st.rerun()
     
