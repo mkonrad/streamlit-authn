@@ -69,6 +69,7 @@ streamlit-oauth==0.1.9
 tenacity==8.4.1
 tinydb==4.8.0
 toml==0.10.2
+tomlkit==0.13.0
 toolz==0.12.1
 tornado==6.4.1
 transaction==4.0

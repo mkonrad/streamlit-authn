@@ -3,6 +3,7 @@
 
 # Authnyc Specific
 user_store.*
+oidc_store.*
 *.log
 
 # Byte-compiled / optimized / DLL files

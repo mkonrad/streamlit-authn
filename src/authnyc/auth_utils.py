@@ -27,9 +27,8 @@ from streamlit_oauth import OAuth2Component
 from yaml.loader import SafeLoader
 
 def initialize_creds_authenticator():
-    wd = app_dir()
     config_file = r'creds_authenticator.yaml'
-    auth_config_path = os.path.join(wd, config_file)
+    auth_config_path = os.path.join(app_dir(), config_file)
 
     with open(auth_config_path) as file:
         config = yaml.load(file, Loader=SafeLoader)
@@ -58,8 +57,9 @@ def confirm_creds(authenticator):
         st.warning('Please enter your username and password')
 
 
-def initialize_token_authenticator():
-    # Coniugration is initialized in common_utils.py 
+def initialize_token_authenticator(oidc_config):
+    logger.debug("Initializer token oidc provider...{}", oidc_config)
+    '''
     if st.session_state.config:
         config = st.session_state.config
         AUTHORIZE_URL = config['AUTHORIZE_URL']
@@ -83,7 +83,7 @@ def initialize_token_authenticator():
 
     else:
         st.error('OAuth settings not found.', icon=":material/error:")
-
+    '''
     return None
  
 

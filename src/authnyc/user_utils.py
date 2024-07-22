@@ -190,7 +190,7 @@ def update_local_user_record(user_record, found_record):
     id = found_record['id']
     inserted_at = found_record['inserted_at']
 
-    date_format = '%Y-%d-%m %H:%M:%S'
+    date_format = '%Y-%m-%d %H:%M:%S'
     updated_at = du.convert_date(format=date_format)
 
     user_record['id'] = id

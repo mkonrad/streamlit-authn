@@ -14,45 +14,32 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import oidc_form as po
+import authnyc_form as af
 import streamlit as st
 
 from common_utils import initialize
-from auth_utils import initialize_token_authenticator
+from loguru import logger
 from navigation import make_sidebar
 
-def main(msg):
+def main():
     make_sidebar()
     
     st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
-    if 'authenticated' not in st.session_state:
-        st.write('A Streamlit authentication demonstration application.')
-
-        po.present_discovery_form()
-        if 'oidc_disc_url_set' in st.session_state:
-            po.present_api_form()
-
-        if st.session_state.valid_oidc == False:
-            st.write(f'Status: :red[{msg}]')
-        else:
-            st.write(f'Status: :green[{msg}]')
-
-    if 'authenticated' in st.session_state:
-        st.write(f'Welcome *{st.session_state.user_record['name']}*')
-        st.write('Bringing some :sun_with_face:')
-        st.write(st.session_state['token'])
+    if not st.session_state['oidc_provider_configured']:
+        if 'oidc_discovery_form_submitted' not in st.session_state:
+            logger.debug("Initial OIDC provider state...{}", st.session_state)
+            af.present_oidc_discovery_form()
+    if 'oidc_discovery_form_submitted' in st.session_state and \
+        st.session_state['oidc_discovery_form_submitted'] == True:
+        logger.debug("OIDC provider form submitted state...{}", st.session_state)
+        af.present_oidc_api_form()
+    if 'oidc_api_form_submitted' in st.session_state and \
+        st.session_state['oidc_api_form_submitted'] == True:
+        logger.debug("OIDC api form submitted state...{}", st.session_state)
+        af.present_authnyc_form()
 
 
 if __name__ == "__main__":
-    msg = "OIDC configured successfully!"
-    
-    try: 
-        initialize()
-        initialize_token_authenticator()
-        if 'valid_oidc' not in st.session_state:
-            st.session_state.valid_oidc = True
-    except RuntimeError as e:
-        msg = str(e)
-        st.session_state.valid_oidc = False
-
-    main(msg)
+    initialize()
+        
+    main()

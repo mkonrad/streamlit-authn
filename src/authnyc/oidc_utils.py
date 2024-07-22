@@ -19,6 +19,7 @@ import requests
 import streamlit as st
 import validators
 
+from common_utils import update_configuration
 from loguru import logger
 from tinydb import TinyDB, Query
 
@@ -32,40 +33,111 @@ def initialize_oidc_store():
         st.session_state.oidc_store = db
 
 
-def parse_oidc_disc_url():
-    if 'oidc_disc_url' not in st.session_state:
-        logger.error("Missing OIDC Discovery URL.")
+def validate_oidc_discovery_form():
+    if 'Select' in st.session_state['selected_oidc_provider']:
+        if st.session_state['oidc_discovery_url'] is None or \
+            st.session_state['oidc_client_id'] is None or \
+            st.session_state['oidc_client_secret'] is None or \
+            st.session_state['redirect_uri'] is None:
+            return False
+        return False
     else:
-        if validate_form_values():
-            get_oidc_configuration()
+        disc_url = st.session_state['oidc_discovery_url']
+        disc_url_valid = validators.url(disc_url)
+
+        if disc_url_valid:
+            oidc_provider = parse_oidc_configuration()
+            save_oidc_provider(oidc_provider)
+            return True
+        
+        return False
 
 
-def validate_form_values():
-    disc_url = st.session_state['oidc_disc_url']
-    client_id = st.session_state['oidc_client_id']
-    client_secret = st.session_state['oidc_client_secret']
-    disc_url_valid = validators.url(disc_url)
-    if client_id is not None and client_secret is not None and disc_url_valid:
+def validate_oidc_api_form():
+    if 'Select' in st.session_state['selected_oidc_api_provider']:
+        if st.session_state['api_domain'] is None or \
+            st.session_state['api_client_id'] is None or \
+            st.session_state['api_client_secret'] is None or \
+            st.session_state['api_audience'] is None:
+            return False
+        return False
+    else:
+        save_oidc_api_provider()
         return True
-    
-    return False
 
 
-def get_oidc_configuration():
-    response = requests.get(st.session_state['oidc_disc_url'])
+def parse_oidc_configuration():
+    oidc_provider = {}
+    oidc_config = {}
+    client_config = {}
+    response = requests.get(st.session_state['oidc_discovery_url'])
     logger.debug("OIDC configuration response...{}", response.json())
-    '''
-    {'issuer': 'https://dev-skci602t6y4tt6zi.us.auth0.com/', 
-    'authorization_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/authorize', 
-    'token_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/oauth/token', 
-    'device_authorization_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/oauth/device/code', 
-    'userinfo_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/userinfo', 'mfa_challenge_endpoint': 
-    'https://dev-skci602t6y4tt6zi.us.auth0.com/mfa/challenge', 
-    'jwks_uri': 'https://dev-skci602t6y4tt6zi.us.auth0.com/.well-known/jwks.json', 'registration_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/oidc/register', 'revocation_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/oauth/revoke', 'scopes_supported': ['openid', 'profile', 'offline_access', 'name', 'given_name', 'family_name', 'nickname', 'email', 'email_verified', 'picture', 'created_at', 'identities', 'phone', 'address'], 'response_types_supported': ['code', 'token', 'id_token', 'code token', 'code id_token', 'token id_token', 'code token id_token'], 'code_challenge_methods_supported': ['S256', 'plain'], 'response_modes_supported': ['query', 'fragment', 'form_post'], 'subject_types_supported': ['public'], 'id_token_signing_alg_values_supported': ['HS256', 'RS256', 'PS256'], 'token_endpoint_auth_methods_supported': ['client_secret_basic', 'client_secret_post', 'private_key_jwt'], 'claims_supported': ['aud', 'auth_time', 'created_at', 'email', 'email_verified', 'exp', 'family_name', 'given_name', 'iat', 'identities', 'iss', 'name', 'nickname', 'phone_number', 'picture', 'sub'], 'request_uri_parameter_supported': False, 'request_parameter_supported': False, 'token_endpoint_auth_signing_alg_values_supported': ['RS256', 'RS384', 'PS256'], 'end_session_endpoint': 'https://dev-skci602t6y4tt6zi.us.auth0.com/oidc/logout'}
-    '''
-    oidc_dict = response.json()
-    oidc_dict['client_id'] = st.session_state['oidc_client_id']
-    oidc_dict['client_secret'] = st.session_state['oidc_client_secret']
+    oidc_config['provider'] = response.json()
+    client_config['client_id'] = st.session_state['oidc_client_id']
+    client_config['client_secret'] = st.session_state['oidc_client_secret']
+    client_config['redirect_uri'] = st.session_state['redirect_uri']
+    oidc_config['client'] = client_config
+    oidc_provider[st.session_state['selected_oidc_provider']] = oidc_config
 
-    logger.debug("OIDC client configuration...{}", oidc_dict)
+    logger.debug("OIDC provider configuration...{}", oidc_provider)
 
+    return oidc_provider
+
+
+def save_oidc_provider(oidc_provider):
+    logger.debug("OIDC provider to be saved...{}", oidc_provider)
+    if 'oidc_store' not in st.session_state:
+        initialize_oidc_store()
+
+    oidc_store = st.session_state['oidc_store']
+    oidc_store.insert(oidc_provider)
+
+    st.session_state['oidc_provider_configured'] = True
+
+
+def save_oidc_api_provider():
+    api_provider = {}
+    api_config = {}
+    selected_oidc_api_provider = st.session_state['selected_oidc_api_provider']
+    api_name = selected_oidc_api_provider
+
+    api_config['api_domain'] = st.session_state['api_domain']
+    api_config['api_client_id'] = st.session_state['api_client_id']
+    api_config['api_client_secret'] = st.session_state['api_client_secret']
+    api_config['api_audience'] = st.session_state['api_audience']
+
+    api_provider[api_name] = api_config
+    logger.debug("OIDC API provider to be saved...{}", api_provider)
+    
+    if 'oidc_store' not in st.session_state:
+        initialize_oidc_store()
+
+    oidc_store = st.session_state['oidc_store']
+    oidc_store.insert(api_provider)
+
+    update_configuration()
+
+
+def get_oidc_provider_config():
+    if 'app_config' in st.session_state:
+        app_config = st.session_state['app_config']
+
+        oidc_provider_name = app_config['oidc_provider_name']
+
+        return lookup_provider(oidc_provider_name)
+
+def lookup_provider(name):
+    if 'oidc_store' not in st.session_state:
+        initialize_oidc_store()
+
+    oidc_store = st.session_state['oidc_store']
+    Provider = Query()
+    provider_record = oidc_store.search(Provider.name == name)
+    if not provider_record:
+        logger.info("OIDC provider not found, search result...{}", provider_record)
+        provider_record = None
+    else:
+        logger.debug("OIDC provider found...{}", provider_record[0])
+        provider_record = dict(provider_record[0])
+
+    return provider_record

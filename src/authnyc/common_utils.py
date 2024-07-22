@@ -16,11 +16,58 @@
 
 import os
 import streamlit as st
+import tomlkit
 
 from dotenv import dotenv_values
 from loguru import logger
 
+
+config_file = r'authnyc.toml'
+
 def initialize():
+    initialize_logger()
+
+    config_path = os.path.join(app_dir(), config_file)
+    with open(config_path, "rb") as f:
+        authnyc = tomlkit.load(f)
+
+    # Hard coded hack that needs to be updated
+    oidc_configured = authnyc['config']['oidc_provider_configured']
+    if oidc_configured:
+        config = {
+            'oidc_provider_name': authnyc['Auth0']['oidc_provider_name'],
+            'oidc_api_provider_name': authnyc['Auth0']['oidc_api_provider_name']
+        }
+
+        if 'app_config' not in st.session_state:
+            st.session_state['app_config'] = config
+
+    if 'oidc_provider_configured' not in st.session_state:
+        st.session_state['oidc_provider_configured'] = \
+            authnyc['config']['oidc_provider_configured']
+
+
+def update_configuration():
+    doc = tomlkit.document()
+    updated_config = tomlkit.table()
+    updated_config.add('oidc_provider_configured', st.session_state['oidc_provider_configured'])
+    doc.add("config", updated_config)
+
+    if 'selected_oidc_provider' in st.session_state:
+        if 'selected_oidc_api_provider' in st.session_state:
+            provider_config = tomlkit.table()
+            provider_config.add('oidc_provider_name', 
+                                st.session_state['selected_oidc_provider'])
+            provider_config.add('oidc_api_provider_name', st.session_state['selected_oidc_api_provider'])
+            doc.add(tomlkit.nl())
+            doc.add(st.session_state['selected_oidc_provider'], provider_config)
+
+    config_path = os.path.join(app_dir(), config_file)
+    with open(config_path, "w") as f:
+        tomlkit.dump(doc, f)
+
+
+def initialize_env():
     initialize_logger()
     config = initialize_config()
     try: 
