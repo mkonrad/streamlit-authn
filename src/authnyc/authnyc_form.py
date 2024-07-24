@@ -23,7 +23,7 @@ from loguru import logger
 
 def present_oidc_discovery_form():
     with st.form(key='oidc_discovery_form'):
-        st.selectbox('OIDC Provider', st.session_state['oidc_provider_names'], 
+        st.selectbox('OIDC Provider', st.session_state['oidc_provider_list'], 
                      index = 0, key='selected_oidc_provider')
         st.text_input(label="Enter OIDC Discovery URL",
                       max_chars=128, key='oidc_discovery_url',
@@ -37,62 +37,60 @@ def present_oidc_discovery_form():
                       placeholder="***...***")
         st.text_input(label="Enter Redirect URI",
                       max_chars=128, key='redirect_uri',
-                      placeholder="http://localhost:8501")
+                      placeholder="http://localhost:8501",
+                      value="http://localhost:8501")
         
         st.form_submit_button("Next", 
                               on_click=oidc_discovery_form_clicked)
 
 
 def present_oidc_api_form():
-    valid = oidc.validate_oidc_discovery_form()
-    if valid:
-        del st.session_state['oidc_discovery_form_submitted']
-        with st.form(key='oidc_api_form'):
-            st.selectbox('OIDC API', st.session_state['oidc_api_provider_names'], 
-                         index = 0, key='selected_oidc_api_provider')
-            st.text_input(label="API Domain", max_chars=128, 
-                          key='api_domain',
-                          placeholder="api.resource.domain")
-            st.text_input(label="API Client ID", max_chars=128, 
-                          key='api_client_id',
-                          placeholder="czy...abx")
-            st.text_input(label="API Client Secret", max_chars=128, 
-                          key='api_client_secret', type='password',
-                          placeholder="***...***")
-            st.text_input(label="API Audience", max_chars=128, 
-                          key='api_audience',
-                          placeholder="https://api.provider.domain/api/v2/")
-            
-            st.form_submit_button("Next", on_click=oidc_api_form_clicked)
-    else:
-        del st.session_state['oidc_discovery_form_submitted']
+    del st.session_state['oidc_discovery_form_submitted']
+    with st.form(key='oidc_api_form'):
+        st.selectbox('OIDC API', st.session_state['oidc_api_provider_list'], 
+                        index = 0, key='selected_oidc_api_provider')
+        st.text_input(label="API Domain", max_chars=128, 
+                        key='api_domain',
+                        placeholder="api.resource.domain")
+        st.text_input(label="API Client ID", max_chars=128, 
+                        key='api_client_id',
+                        placeholder="czy...abx")
+        st.text_input(label="API Client Secret", max_chars=128, 
+                        key='api_client_secret', type='password',
+                        placeholder="***...***")
+        st.text_input(label="API Audience", max_chars=128, 
+                        key='api_audience',
+                        placeholder="https://api.provider.domain/api/v2/")
+        
+        st.form_submit_button("Next", on_click=oidc_api_form_clicked)
 
 
 def present_authnyc_form():
-    valid = oidc.validate_oidc_api_form()
-    if valid:
-        del st.session_state['oidc_api_form_submitted']
-        oidc_config = oidc.get_oidc_provider_config()
-        if 'authenticated' not in st.session_state:
-            initialize_token_authenticator(oidc_config)
+    del st.session_state['oidc_api_form_submitted']
+    oidc_config = oidc.get_oidc_provider_config()
+    if 'authenticated' not in st.session_state:
+        initialize_token_authenticator(oidc_config)
+        
 
-        if 'authenticated' in st.session_state:
-            st.write(f'Welcome *{st.session_state.user_record['name']}*')
-            st.write('Bringing some :sun_with_face:')
-            st.write(st.session_state['token'])
-    else:
-        del st.session_state['oidc_api_form_submitted']
+    if 'authenticated' in st.session_state:
+        st.write(f'Welcome *{st.session_state['user_record']['name']}*')
+        st.write('Bringing some :sun_with_face:')
+        st.write(st.session_state['token'])
             
 
 def oidc_discovery_form_clicked():
-    if 'oidc_discovery_form_submitted' not in st.session_state:
-        st.session_state['oidc_discovery_form_submitted'] = True
+    valid = oidc.validate_oidc_discovery_form()
+    if valid:
+        if 'oidc_discovery_form_submitted' not in st.session_state:
+            st.session_state['oidc_discovery_form_submitted'] = True
 
     logger.debug("OIDC Discovery form state...{}", st.session_state)
 
 
 def oidc_api_form_clicked():
-    if 'oidc_api_form_submitted' not in st.session_state:
-        st.session_state['oidc_api_form_submitted'] = True
+    valid = oidc.validate_oidc_api_form()
+    if valid:
+        if 'oidc_api_form_submitted' not in st.session_state:
+            st.session_state['oidc_api_form_submitted'] = True
 
     logger.debug("OIDC API form state...{}", st.session_state)

@@ -60,36 +60,28 @@ def confirm_creds(authenticator):
 def initialize_token_authenticator(oidc_config):
     logger.debug("Initializer token oidc provider...{}", oidc_config)
 
-    '''
-    if st.session_state.config:
-        config = st.session_state.config
-        AUTHORIZE_URL = config['AUTHORIZE_URL']
-        TOKEN_URL = config['TOKEN_URL']
-        REFRESH_TOKEN_URL = config['REFRESH_TOKEN_URL']
-        REVOKE_TOKEN_URL = config['REVOKE_TOKEN_URL']
-        CLIENT_ID = config['CLIENT_ID']
-        CLIENT_SECRET = config['CLIENT_SECRET']
+    provider = oidc_config['config']['provider']
+    client = oidc_config['config']['client']
 
-        if 'redirect_uri' not in st.session_state:
-            st.session_state.redirect_uri = config['REDIRECT_URI']
+    if 'redirect_uri' not in st.session_state:
+        st.session_state['redirect_uri'] = client['redirect_uri']
 
-        authenticator = OAuth2Component(CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, 
-                                        TOKEN_URL, REFRESH_TOKEN_URL, REVOKE_TOKEN_URL)
-        
-        if 'authenticator' not in st.session_state:
-            st.session_state.authenticator = authenticator
-        else:
-            del st.session_state.authenticator
-            st.session_state.authenticator = authenticator
-
+    authenticator = OAuth2Component(client['client_id'], 
+                                    client['client_secret'], 
+                                    provider['authorization_endpoint'],
+                                    provider['token_endpoint'],
+                                    provider['token_endpoint'],
+                                    provider['revocation_endpoint'])
+    
+    if 'authenticator' not in st.session_state:
+        st.session_state.authenticator = authenticator
     else:
-        st.error('OAuth settings not found.', icon=":material/error:")
-    '''
-    return None
+        del st.session_state.authenticator
+        st.session_state.authenticator = authenticator
  
 
 def initialize_auth0_api_authenticator():
-    # Coniugration is initialized in common_utils.py 
+    
     if st.session_state.api_config:
         api_config = st.session_state.api_config
 

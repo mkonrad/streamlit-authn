@@ -1,18 +1,12 @@
 [config]
-oidc_provider_configured = false
+oidc_provider_configured = true
+oidc_provider_key = "auth0"
+oidc_api_provider_key = "auth0_api"
 
-[[oidc_providers]]
-name = "Select a provider"
-key = "Select a provider"
+[oidc_providers]
+"Select a provider" = "select_provider"
+"Auth0" = "auth0"
 
-[[oidc_providers]]
-name = "Auth0"
-key = "auth0"
-
-[[oidc_api_providers]] 
-name = "Select a resource"
-key = "Select a resource"
-
-[[oidc_api_providers]] 
-name = "Auth0 API"
-key = "auth0_api"
+[oidc_api_providers]
+"Select a resource" = "select_resource"
+"Auth0 API" = "auth0_api"

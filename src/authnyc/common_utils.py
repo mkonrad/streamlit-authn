@@ -50,39 +50,41 @@ def initialize():
 
 def update_app_configuration():
     config_path = os.path.join(app_path(), config_file)
-    with open(config_path, "w") as f:
+    with open(config_path, "r+") as f:
         authnyc = tomlkit.load(f)
-    
+        logger.debug("Update app configuration settings...{}", authnyc)
+        logger.debug("Update app configuration state...{}", st.session_state)
+        f.seek(0)
         authnyc['config']['oidc_provider_configured'] =  \
             st.session_state['oidc_provider_configured']
         authnyc['config']['oidc_provider_key'] = \
             st.session_state['oidc_provider_key']
         authnyc['config']['oidc_api_provider_key'] = \
             st.session_state['oidc_api_provider_key']
-    
-        tomlkit.dump(authnyc, f)
 
+        tomlkit.dump(authnyc, f)
+        
 
 def initialize_oidc_providers(oidc_providers):
-    logger.debug("Initialization OIDC providers...{}", oidc_providers)
-    oidc_provider_names = []
-    for index in range(len(oidc_providers)):
-        for k, _ in oidc_providers[index].items():
-            oidc_provider_names.append(k)
+    #logger.debug("Initialization OIDC providers...{}", oidc_providers)
+    oidc_provider_names = list(oidc_providers.keys())
 
-    if 'oidc_provider_names' not in st.session_state:
-        st.session_state['oidc_provider_names'] = oidc_provider_names
+    if 'oidc_provider_list' not in st.session_state:
+        st.session_state['oidc_provider_list'] = oidc_provider_names
+
+    if 'oidc_providers' not in st.session_state:
+        st.session_state['oidc_providers'] = oidc_providers
         
 
 def initialize_oidc_api_providers(oidc_api_providers):
-    logger.debug("Initialization OIDC API providers...{}", oidc_api_providers)
-    oidc_api_provider_names = []
-    for index in range(len(oidc_api_providers)):
-        for k, _ in oidc_api_providers[index].items():
-            oidc_api_provider_names.append(k)
+    #logger.debug("Initialization OIDC API providers...{}", oidc_api_providers)
+    oidc_api_provider_names = list(oidc_api_providers.keys())
 
-    if 'oidc_api_provider_names' not in st.session_state:
-        st.session_state['oidc_api_provider_names'] = oidc_api_provider_names
+    if 'oidc_api_provider_list' not in st.session_state:
+        st.session_state['oidc_api_provider_list'] = oidc_api_provider_names
+
+    if 'oidc_api_providers' not in st.session_state:
+        st.session_state['oidc_api_providers'] = oidc_api_providers
 
 
 def initialize_env():

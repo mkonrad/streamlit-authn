@@ -198,6 +198,10 @@ macOS:
     . ./venv/bin/activate
 
 
+## Pip Upgrade
+
+    python.exe -m pip install --upgrade pip
+
 ## Logos
 
 

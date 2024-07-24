@@ -40,12 +40,13 @@ def get_oidc_provider_config():
     provider_key = st.session_state['oidc_provider_key']
     return lookup_provider(provider_key)
 
+
 def validate_oidc_discovery_form():
     if 'Select' in st.session_state['selected_oidc_provider']:
-        if st.session_state['oidc_discovery_url'] is None or \
-            st.session_state['oidc_client_id'] is None or \
-            st.session_state['oidc_client_secret'] is None or \
-            st.session_state['redirect_uri'] is None:
+        if not st.session_state['oidc_discovery_url'] or \
+            st.session_state['oidc_client_id'] or \
+            st.session_state['oidc_client_secret'] or \
+            st.session_state['redirect_uri']:
             return False
         return False
     else:
@@ -62,10 +63,10 @@ def validate_oidc_discovery_form():
 
 def validate_oidc_api_form():
     if 'Select' in st.session_state['selected_oidc_api_provider']:
-        if st.session_state['api_domain'] is None or \
-            st.session_state['api_client_id'] is None or \
-            st.session_state['api_client_secret'] is None or \
-            st.session_state['api_audience'] is None:
+        if not st.session_state['api_domain'] or \
+            st.session_state['api_client_id'] or \
+            st.session_state['api_client_secret'] or \
+            st.session_state['api_audience']:
             return False
         return False
     else:
@@ -92,8 +93,10 @@ def parse_oidc_configuration():
 def save_oidc_provider(oidc_config):
     oidc_provider = {}
     provider_name = st.session_state['selected_oidc_provider']
-    provider_list = st.session_state['oidc_providers']
-    provider_key = get_provider_key(provider_list, provider_name)
+    logger.debug("Selected OIDC provider name...{}", provider_name)
+    oidc_providers = st.session_state['oidc_providers']
+    provider_key = get_provider_key(oidc_providers, provider_name)
+    logger.debug("Selected OIDC provider key...{}", provider_key)
     existing_record = lookup_provider(provider_key)
     if existing_record is None:
         id = str(uuid.uuid4())
@@ -117,10 +120,11 @@ def save_oidc_provider(oidc_config):
 
 def save_oidc_api_provider():
     api_provider = {}
+    provider = {}
     api_config = {}
     provider_name = st.session_state['selected_oidc_api_provider']
-    provider_list = st.session_state['oidc_providers']
-    provider_key = get_provider_key(provider_list, provider_name)
+    oidc_api_providers = st.session_state['oidc_api_providers']
+    provider_key = get_provider_key(oidc_api_providers, provider_name)
     existing_record = lookup_provider(provider_key)
     if existing_record is None:
         api_config['api_domain'] = st.session_state['api_domain']
@@ -136,7 +140,8 @@ def save_oidc_api_provider():
         api_provider['inserted_at'] = inserted_at
         api_provider['updated_at'] = inserted_at
         api_provider['name'] = provider_key
-        api_provider['config'] = api_config
+        provider['provider'] = api_config
+        api_provider['config'] = provider
         logger.debug("OIDC API provider to be saved...{}", api_provider)
         
         oidc_store = get_oidc_store()
@@ -162,8 +167,7 @@ def lookup_provider(name):
     return provider_record
 
 
-def get_provider_key(provider_list, name):
-    for index in range(len(provider_list)):
-        for k, v in provider_list[index].items():
-            if k == name:
-                return v
+def get_provider_key(providers, name):
+    for k, v in providers.items():
+        if k == name:
+            return v
