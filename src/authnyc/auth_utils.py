@@ -21,14 +21,14 @@ import yaml
 
 from auth0.authentication import GetToken
 from auth0.management import Auth0
-from common_utils import app_dir
+from common_utils import app_path
 from loguru import logger
 from streamlit_oauth import OAuth2Component
 from yaml.loader import SafeLoader
 
 def initialize_creds_authenticator():
     config_file = r'creds_authenticator.yaml'
-    auth_config_path = os.path.join(app_dir(), config_file)
+    auth_config_path = os.path.join(app_path(), config_file)
 
     with open(auth_config_path) as file:
         config = yaml.load(file, Loader=SafeLoader)
@@ -59,6 +59,7 @@ def confirm_creds(authenticator):
 
 def initialize_token_authenticator(oidc_config):
     logger.debug("Initializer token oidc provider...{}", oidc_config)
+
     '''
     if st.session_state.config:
         config = st.session_state.config

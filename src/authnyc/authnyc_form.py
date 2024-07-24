@@ -23,16 +23,18 @@ from loguru import logger
 
 def present_oidc_discovery_form():
     with st.form(key='oidc_discovery_form'):
-        provider_list = ["Select a provider", "Auth0"]
-        st.selectbox('OIDC Provider', provider_list, index = 0,  
-                     key='selected_oidc_provider')
+        st.selectbox('OIDC Provider', st.session_state['oidc_provider_names'], 
+                     index = 0, key='selected_oidc_provider')
         st.text_input(label="Enter OIDC Discovery URL",
-                      max_chars=128, key='oidc_discovery_url')
-        st.text_input(label="Enter Client ID",
-                      max_chars=128, key='oidc_client_id')
-        st.text_input(label="Enter Client Secret",
+                      max_chars=128, key='oidc_discovery_url',
+                      placeholder="https://oidc.provider.domain/.well-known/openid-configuration")
+        st.text_input(label="Client ID",
+                      max_chars=128, key='oidc_client_id',
+                      placeholder="abx...czy")
+        st.text_input(label="Client Secret",
                       max_chars=128, key='oidc_client_secret',
-                      type='password')
+                      type='password',
+                      placeholder="***...***")
         st.text_input(label="Enter Redirect URI",
                       max_chars=128, key='redirect_uri',
                       placeholder="http://localhost:8501")
@@ -46,17 +48,20 @@ def present_oidc_api_form():
     if valid:
         del st.session_state['oidc_discovery_form_submitted']
         with st.form(key='oidc_api_form'):
-            api_provider_list = ["Select an API", "Auth0 API"]
-            st.selectbox('OIDC API', api_provider_list, index = 0,  
-                     key='selected_oidc_api_provider')
-            st.text_input(label="Enter API Domain", max_chars=128, 
-                          key='api_domain')
-            st.text_input(label="Enter API Client ID", max_chars=128, 
-                          key='api_client_id')
-            st.text_input(label="Enter API Client Secret", max_chars=128, 
-                          key='api_client_secret', type='password')
-            st.text_input(label="Enter API Audience", max_chars=128, 
-                          key='api_audience')
+            st.selectbox('OIDC API', st.session_state['oidc_api_provider_names'], 
+                         index = 0, key='selected_oidc_api_provider')
+            st.text_input(label="API Domain", max_chars=128, 
+                          key='api_domain',
+                          placeholder="api.resource.domain")
+            st.text_input(label="API Client ID", max_chars=128, 
+                          key='api_client_id',
+                          placeholder="czy...abx")
+            st.text_input(label="API Client Secret", max_chars=128, 
+                          key='api_client_secret', type='password',
+                          placeholder="***...***")
+            st.text_input(label="API Audience", max_chars=128, 
+                          key='api_audience',
+                          placeholder="https://api.provider.domain/api/v2/")
             
             st.form_submit_button("Next", on_click=oidc_api_form_clicked)
     else:

@@ -14,24 +14,31 @@
 # limitations under the License.
 # Date: 2024-07-19
 
+import date_utils as du
 import os
 import requests
 import streamlit as st
+import uuid
 import validators
 
-from common_utils import update_configuration
+from common_utils import update_app_configuration
 from loguru import logger
 from tinydb import TinyDB, Query
 
-def initialize_oidc_store():
+
+@st.cache_resource
+def get_oidc_store():
     oidc_store_filename = r'oidc_store.json'
     oidc_store_path = os.path.join(os.getcwd(), oidc_store_filename)
 
     db = TinyDB(oidc_store_path)
 
-    if 'oidc_store' not in st.session_state:
-        st.session_state.oidc_store = db
+    return db
 
+
+def get_oidc_provider_config():
+    provider_key = st.session_state['oidc_provider_key']
+    return lookup_provider(provider_key)
 
 def validate_oidc_discovery_form():
     if 'Select' in st.session_state['selected_oidc_provider']:
@@ -67,7 +74,6 @@ def validate_oidc_api_form():
 
 
 def parse_oidc_configuration():
-    oidc_provider = {}
     oidc_config = {}
     client_config = {}
     response = requests.get(st.session_state['oidc_discovery_url'])
@@ -77,20 +83,34 @@ def parse_oidc_configuration():
     client_config['client_secret'] = st.session_state['oidc_client_secret']
     client_config['redirect_uri'] = st.session_state['redirect_uri']
     oidc_config['client'] = client_config
-    oidc_provider[st.session_state['selected_oidc_provider']] = oidc_config
 
-    logger.debug("OIDC provider configuration...{}", oidc_provider)
+    logger.debug("OIDC provider configuration...{}", oidc_config)
 
-    return oidc_provider
+    return oidc_config
 
 
-def save_oidc_provider(oidc_provider):
-    logger.debug("OIDC provider to be saved...{}", oidc_provider)
-    if 'oidc_store' not in st.session_state:
-        initialize_oidc_store()
+def save_oidc_provider(oidc_config):
+    oidc_provider = {}
+    provider_name = st.session_state['selected_oidc_provider']
+    provider_list = st.session_state['oidc_providers']
+    provider_key = get_provider_key(provider_list, provider_name)
+    existing_record = lookup_provider(provider_key)
+    if existing_record is None:
+        id = str(uuid.uuid4())
+        date_format = '%Y-%m-%d %H:%M:%S'
+        inserted_at = du.convert_date(format=date_format)
 
-    oidc_store = st.session_state['oidc_store']
-    oidc_store.insert(oidc_provider)
+        oidc_provider['id'] = id
+        oidc_provider['inserted_at'] = inserted_at
+        oidc_provider['updated_at'] = inserted_at
+        oidc_provider['name'] = provider_key
+        oidc_provider['config'] = oidc_config
+        logger.debug("OIDC providers to be saved...{}", oidc_provider)
+        oidc_store = get_oidc_store()
+        oidc_store.insert(oidc_provider)
+
+    if 'oidc_provider_key' not in st.session_state:
+        st.session_state['oidc_provider_key'] = provider_key
 
     st.session_state['oidc_provider_configured'] = True
 
@@ -98,39 +118,38 @@ def save_oidc_provider(oidc_provider):
 def save_oidc_api_provider():
     api_provider = {}
     api_config = {}
-    selected_oidc_api_provider = st.session_state['selected_oidc_api_provider']
-    api_name = selected_oidc_api_provider
+    provider_name = st.session_state['selected_oidc_api_provider']
+    provider_list = st.session_state['oidc_providers']
+    provider_key = get_provider_key(provider_list, provider_name)
+    existing_record = lookup_provider(provider_key)
+    if existing_record is None:
+        api_config['api_domain'] = st.session_state['api_domain']
+        api_config['api_client_id'] = st.session_state['api_client_id']
+        api_config['api_client_secret'] = st.session_state['api_client_secret']
+        api_config['api_audience'] = st.session_state['api_audience']
 
-    api_config['api_domain'] = st.session_state['api_domain']
-    api_config['api_client_id'] = st.session_state['api_client_id']
-    api_config['api_client_secret'] = st.session_state['api_client_secret']
-    api_config['api_audience'] = st.session_state['api_audience']
+        id = str(uuid.uuid4())
+        date_format = '%Y-%m-%d %H:%M:%S'
+        inserted_at = du.convert_date(format=date_format)
 
-    api_provider[api_name] = api_config
-    logger.debug("OIDC API provider to be saved...{}", api_provider)
-    
-    if 'oidc_store' not in st.session_state:
-        initialize_oidc_store()
+        api_provider['id'] = id
+        api_provider['inserted_at'] = inserted_at
+        api_provider['updated_at'] = inserted_at
+        api_provider['name'] = provider_key
+        api_provider['config'] = api_config
+        logger.debug("OIDC API provider to be saved...{}", api_provider)
+        
+        oidc_store = get_oidc_store()
+        oidc_store.insert(api_provider)
 
-    oidc_store = st.session_state['oidc_store']
-    oidc_store.insert(api_provider)
+    if 'oidc_api_provider_key' not in st.session_state:
+        st.session_state['oidc_api_provider_key'] = provider_key
 
-    update_configuration()
+    update_app_configuration()
 
-
-def get_oidc_provider_config():
-    if 'app_config' in st.session_state:
-        app_config = st.session_state['app_config']
-
-        oidc_provider_name = app_config['oidc_provider_name']
-
-        return lookup_provider(oidc_provider_name)
 
 def lookup_provider(name):
-    if 'oidc_store' not in st.session_state:
-        initialize_oidc_store()
-
-    oidc_store = st.session_state['oidc_store']
+    oidc_store = get_oidc_store()
     Provider = Query()
     provider_record = oidc_store.search(Provider.name == name)
     if not provider_record:
@@ -141,3 +160,10 @@ def lookup_provider(name):
         provider_record = dict(provider_record[0])
 
     return provider_record
+
+
+def get_provider_key(provider_list, name):
+    for index in range(len(provider_list)):
+        for k, v in provider_list[index].items():
+            if k == name:
+                return v

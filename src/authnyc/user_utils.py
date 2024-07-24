@@ -26,22 +26,20 @@ from tinydb import TinyDB, Query
 from loguru import logger
 
 
-def initialize_user_store():
+@st.cache_resource
+def get_user_store():
     user_store_filename = r'user_store.json'
     user_store_path = os.path.join(os.getcwd(), user_store_filename)
 
     db = TinyDB(user_store_path)
 
-    if 'user_store' not in st.session_state:
-        st.session_state.user_store = db
+    return db
 
 
 def finduser(email):
     logger.debug("Searching for user...{}", email)
-    if 'user_store' not in st.session_state:
-        initialize_user_store()
 
-    user_store = st.session_state.user_store
+    user_store = get_user_store()
 
     User = Query()
     user_record = user_store.search(User.email == email)
@@ -56,7 +54,6 @@ def finduser(email):
 
 
 def adduser(id_token):
-    # TBD: verify the signature for security
     payload = id_token.split(".")[1] + "=="
 
     user_record = get_payload_data(payload)
@@ -75,7 +72,7 @@ def adduser(id_token):
             user_record['updated_at'] = inserted_at
         
             logger.debug("Adding user to user store...{}", user_record)
-            user_store = st.session_state.user_store
+            user_store = get_user_store()
             user_store.insert(user_record)
         else:
             # Update existing record with any changes from OIDC
@@ -88,9 +85,8 @@ def adduser(id_token):
         
 def login():
     if 'authenticator' in st.session_state:
-        authenticator = st.session_state.authenticator
-        redirect_uri = st.session_state.redirect_uri
-        config = st.session_state.config
+        authenticator = st.session_state['authenticator']
+        redirect_uri = st.session_state['redirect_uri']
 
         if 'token' not in st.session_state:
             result = authenticator.authorize_button(
@@ -115,14 +111,14 @@ def login():
                 #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
                 #           algorithms=["RS256", ])
                 
-                st.session_state.token = token
+                st.session_state['token'] = token
                 verify_authentication()
                 st.rerun()
     
 
 def verify_authentication():
     if 'token' in st.session_state:       
-        id_token = st.session_state.token["id_token"]  
+        id_token = st.session_state.token['id_token']  
         user_record = adduser(id_token)
 
         if 'user_record' not in st.session_state:
@@ -184,7 +180,7 @@ def get_payload_data(payload):
 
 
 def update_local_user_record(user_record, found_record):
-    user_store = st.session_state.user_store
+    user_store = get_user_store()
     
     email = found_record['email']
     id = found_record['id']

@@ -27,44 +27,62 @@ config_file = r'authnyc.toml'
 def initialize():
     initialize_logger()
 
-    config_path = os.path.join(app_dir(), config_file)
+    config_path = os.path.join(app_path(), config_file)
     with open(config_path, "rb") as f:
         authnyc = tomlkit.load(f)
 
-    # Hard coded hack that needs to be updated
-    oidc_configured = authnyc['config']['oidc_provider_configured']
-    if oidc_configured:
-        config = {
-            'oidc_provider_name': authnyc['Auth0']['oidc_provider_name'],
-            'oidc_api_provider_name': authnyc['Auth0']['oidc_api_provider_name']
-        }
+    config = authnyc['config']
 
-        if 'app_config' not in st.session_state:
-            st.session_state['app_config'] = config
+    if not config['oidc_provider_configured']:
+        initialize_oidc_providers(authnyc['oidc_providers'].unwrap())
+        initialize_oidc_api_providers(authnyc['oidc_api_providers'].unwrap())
+    else:
+        st.session_state['oidc_provider_configured'] = \
+            config['oidc_provider_configured']
+        st.session_state['oidc_provider_key'] = config['oidc_provider_key']
+        st.session_state['oidc_api_provider_key'] = \
+            config['oidc_api_provider_key']
 
     if 'oidc_provider_configured' not in st.session_state:
         st.session_state['oidc_provider_configured'] = \
-            authnyc['config']['oidc_provider_configured']
+                config['oidc_provider_configured']
+        
 
-
-def update_configuration():
-    doc = tomlkit.document()
-    updated_config = tomlkit.table()
-    updated_config.add('oidc_provider_configured', st.session_state['oidc_provider_configured'])
-    doc.add("config", updated_config)
-
-    if 'selected_oidc_provider' in st.session_state:
-        if 'selected_oidc_api_provider' in st.session_state:
-            provider_config = tomlkit.table()
-            provider_config.add('oidc_provider_name', 
-                                st.session_state['selected_oidc_provider'])
-            provider_config.add('oidc_api_provider_name', st.session_state['selected_oidc_api_provider'])
-            doc.add(tomlkit.nl())
-            doc.add(st.session_state['selected_oidc_provider'], provider_config)
-
-    config_path = os.path.join(app_dir(), config_file)
+def update_app_configuration():
+    config_path = os.path.join(app_path(), config_file)
     with open(config_path, "w") as f:
-        tomlkit.dump(doc, f)
+        authnyc = tomlkit.load(f)
+    
+        authnyc['config']['oidc_provider_configured'] =  \
+            st.session_state['oidc_provider_configured']
+        authnyc['config']['oidc_provider_key'] = \
+            st.session_state['oidc_provider_key']
+        authnyc['config']['oidc_api_provider_key'] = \
+            st.session_state['oidc_api_provider_key']
+    
+        tomlkit.dump(authnyc, f)
+
+
+def initialize_oidc_providers(oidc_providers):
+    logger.debug("Initialization OIDC providers...{}", oidc_providers)
+    oidc_provider_names = []
+    for index in range(len(oidc_providers)):
+        for k, _ in oidc_providers[index].items():
+            oidc_provider_names.append(k)
+
+    if 'oidc_provider_names' not in st.session_state:
+        st.session_state['oidc_provider_names'] = oidc_provider_names
+        
+
+def initialize_oidc_api_providers(oidc_api_providers):
+    logger.debug("Initialization OIDC API providers...{}", oidc_api_providers)
+    oidc_api_provider_names = []
+    for index in range(len(oidc_api_providers)):
+        for k, _ in oidc_api_providers[index].items():
+            oidc_api_provider_names.append(k)
+
+    if 'oidc_api_provider_names' not in st.session_state:
+        st.session_state['oidc_api_provider_names'] = oidc_api_provider_names
 
 
 def initialize_env():
@@ -87,7 +105,7 @@ def initialize_env():
 
 def initialize_config():
     # Load environment variables from .env file
-    env_file = os.path.join(app_dir(), '.env')
+    env_file = os.path.join(app_path(), '.env')
 
     # Load environment to config
     return dotenv_values(env_file)
@@ -95,7 +113,7 @@ def initialize_config():
 
 def initialize_api_config():
     # Load environment variables from .env file
-    env_file = os.path.join(app_dir(), '.apienv')
+    env_file = os.path.join(app_path(), '.apienv')
 
     # Load environment to config
     return dotenv_values(env_file)
@@ -103,7 +121,7 @@ def initialize_api_config():
 
 def initialize_logger():
     logname = "authnyc.log"
-    log_path = os.path.join(app_dir(), logname)
+    log_path = os.path.join(app_path(), logname)
 
     logger.add(log_path)
 
@@ -145,7 +163,7 @@ def validate_keys_list(config_keys):
     Returns:
         bool: True if the required keys are included, False otherwise.
     """
-    oidc_required_settings_file = os.path.join(app_dir(), 
+    oidc_required_settings_file = os.path.join(app_path(), 
                                                r'oidc-required-settings.txt')
     required_keys = []
     with open(oidc_required_settings_file) as oidc:
@@ -163,20 +181,19 @@ def validate_keys_list(config_keys):
 
 
 # Utility method to determine where the application is running from.
-def app_dir():
+def app_path():
     start_path = os.path.realpath(__file__)
-    wd = os.path.dirname(start_path)
+    return os.path.dirname(start_path)
 
-    return wd
 
 # Utility method to get the application png formatted logo.
 def get_png_logo(logo='logo.png'):
-    return os.path.join(app_dir(), r'images', logo)
+    return os.path.join(app_path(), r'images', logo)
 
 
 # Utility method to get the application svg formatted logo.
 def get_svg_logo(logo='logo.svg'):
-    return os.path.join(app_dir(), r'images', logo)
+    return os.path.join(app_path(), r'images', logo)
 
 
 def get_help_url():
