@@ -14,8 +14,10 @@
 # limitations under the License.
 # Date: 2024-06-19
 
+import oidc_utils as oidc
 import streamlit as st
 
+from auth_utils import initialize_auth0_api_authenticator
 from user_utils import update_auth0_user
 from loguru import logger
 
@@ -24,7 +26,6 @@ def present_profile_form_disabled():
     if 'user_record' in st.session_state:
         user_record = st.session_state.user_record
 
-        form_button_label = "Edit"
         with st.form(key="user_profile"):
             st.header("My Profile :standing_person:")
             col1, col2 = st.columns([1,1])
@@ -36,7 +37,7 @@ def present_profile_form_disabled():
                             key="profile_form_given_name", disabled=True)
             col2.text_input("**Last name**:", value=user_record['family_name'],
                             key="profile_form_family_name", disabled=True)
-            st.form_submit_button(form_button_label,
+            st.form_submit_button("Edit",
                                   on_click=profile_form_button_clicked,
                                   use_container_width=True)
             
@@ -44,7 +45,7 @@ def present_profile_form_disabled():
 def present_profile_form_enabled():
     if 'user_record' in st.session_state:
         user_record = st.session_state.user_record
-        form_button_label = "Submit"
+
         with st.form(key="user_profile"):
             st.header("My Profile :standing_person:")
             col1, col2 = st.columns([1,1])
@@ -56,7 +57,7 @@ def present_profile_form_enabled():
                             key="profile_form_given_name")
             col2.text_input("**Last name**:", value=user_record['family_name'],
                             key="profile_form_family_name")
-            st.form_submit_button(form_button_label, 
+            st.form_submit_button("Submit", 
                                   on_click=profile_form_button_clicked,
                                   use_container_width=True)
             
@@ -69,13 +70,15 @@ def profile_form_button_clicked():
         updated_user_record = compare_user_record(user_record_keys)
 
         if updated_user_record is not None:
-            update_auth0_user(updated_user_record)
+            api_config = oidc.get_oidc_api_provider_config()
+            auth0_mgmt_api = initialize_auth0_api_authenticator(api_config)
+            update_auth0_user(updated_user_record, auth0_mgmt_api)
 
 
 def present_sensitive_profile_form_disabled():
     if 'user_record' in st.session_state:
-        user_record = st.session_state.user_record
-        sensitive_form_button_label = "Edit"
+        user_record = st.session_state['user_record']
+
         with st.form(key="user_sensitive_profile"):
             st.caption("Sensitive")
             col1, col2 = st.columns([1,1])
@@ -83,7 +86,7 @@ def present_sensitive_profile_form_disabled():
                             key="profile_form_email", type="password", disabled=True)
             col2.text_input("**Phone number**:", value=user_record['phone_number'],
                                 key="profile_form_phone_number", type="password", disabled=True)
-            st.form_submit_button(sensitive_form_button_label,
+            st.form_submit_button("Edit",
                                   on_click=sensitive_profile_form_button_clicked,
                                   use_container_width=True)
             
@@ -91,7 +94,7 @@ def present_sensitive_profile_form_disabled():
 def present_sensitive_profile_form_enabled():
     if 'user_record' in st.session_state:
         user_record = st.session_state.user_record
-        sensitive_form_button_label = "Submit"
+
         with st.form(key="user_sensitive_profile"):
             st.caption("Sensitive")
             col1, col2 = st.columns([1,1])
@@ -99,7 +102,7 @@ def present_sensitive_profile_form_enabled():
                             key="profile_form_email")
             col2.text_input("**Phone number**:", value=user_record['phone_number'],
                                 key="profile_form_phone_number")
-            st.form_submit_button(sensitive_form_button_label,
+            st.form_submit_button("Submit",
                                   on_click=sensitive_profile_form_button_clicked,
                                   use_container_width=True)
             
@@ -115,7 +118,7 @@ def sensitive_profile_form_button_clicked():
 def compare_user_record(user_record_keys):
     changed = False
     if 'user_record' in st.session_state:
-        user_record = st.session_state.user_record
+        user_record = st.session_state['user_record']
         paired_keys = profile_form_keys(user_record_keys)
 
         updated_user_record = {

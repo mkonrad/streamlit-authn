@@ -27,25 +27,53 @@ config_file = r'authnyc.toml'
 def initialize():
     initialize_logger()
 
+    if is_configured():
+        set_state()
+    else:
+        prep_state()
+
+
+def is_configured():
+    authnyc = get_app_configuration()
+
+    config = authnyc['config']
+
+    if 'oidc_provider_configured' not in st.session_state:
+        st.session_state['oidc_provider_configured'] = \
+            config['oidc_provider_configured']
+
+    return config['oidc_provider_configured']
+
+
+def get_app_configuration():
     config_path = os.path.join(app_path(), config_file)
     with open(config_path, "rb") as f:
         authnyc = tomlkit.load(f)
 
-    config = authnyc['config']
+    return authnyc
 
-    if not config['oidc_provider_configured']:
-        initialize_oidc_providers(authnyc['oidc_providers'].unwrap())
-        initialize_oidc_api_providers(authnyc['oidc_api_providers'].unwrap())
-    else:
-        st.session_state['oidc_provider_configured'] = \
-            config['oidc_provider_configured']
+def set_state():
+    authnyc = get_app_configuration()
+
+    config = authnyc['initialized']
+
+    if 'oidc_provider_key' not in st.session_state:
         st.session_state['oidc_provider_key'] = config['oidc_provider_key']
+    if 'oidc_api_provider_key' not in st.session_state:
         st.session_state['oidc_api_provider_key'] = \
             config['oidc_api_provider_key']
+    if 'redirect_uri' not in st.session_state:
+        st.session_state['redirect_uri'] = \
+            config['redirect_uri']
+        
+    logger.debug("Set state - session state...{}", st.session_state)
+        
+    
+def prep_state():
+    authnyc = get_app_configuration()
 
-    if 'oidc_provider_configured' not in st.session_state:
-        st.session_state['oidc_provider_configured'] = \
-                config['oidc_provider_configured']
+    initialize_oidc_providers(authnyc['oidc_providers'].unwrap())
+    initialize_oidc_api_providers(authnyc['oidc_api_providers'].unwrap())
         
 
 def update_app_configuration():
@@ -57,10 +85,12 @@ def update_app_configuration():
         f.seek(0)
         authnyc['config']['oidc_provider_configured'] =  \
             st.session_state['oidc_provider_configured']
-        authnyc['config']['oidc_provider_key'] = \
+        
+        authnyc['initialized']['oidc_provider_key'] = \
             st.session_state['oidc_provider_key']
-        authnyc['config']['oidc_api_provider_key'] = \
+        authnyc['initialized']['oidc_api_provider_key'] = \
             st.session_state['oidc_api_provider_key']
+        authnyc['initialized']['redirect_uri'] = st.session_state['redirect_uri']
 
         tomlkit.dump(authnyc, f)
         

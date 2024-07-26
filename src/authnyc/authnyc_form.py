@@ -18,6 +18,7 @@ import oidc_utils as oidc
 import streamlit as st
 
 from auth_utils import initialize_token_authenticator
+from common_utils import is_configured
 from loguru import logger
 
 
@@ -66,17 +67,23 @@ def present_oidc_api_form():
 
 
 def present_authnyc_form():
-    del st.session_state['oidc_api_form_submitted']
-    oidc_config = oidc.get_oidc_provider_config()
-    if 'authenticated' not in st.session_state:
-        initialize_token_authenticator(oidc_config)
-        
+    if 'oidc_api_form_submitted' in st.session_state:
+        del st.session_state['oidc_api_form_submitted']
 
+    if is_configured:
+        oidc_config = oidc.get_oidc_provider_config()
+        initialize_token_authenticator(oidc_config)
+
+    if 'authenticated' not in st.session_state:
+        st.write("Please log in!")
+        
     if 'authenticated' in st.session_state:
         st.write(f'Welcome *{st.session_state['user_record']['name']}*')
         st.write('Bringing some :sun_with_face:')
         st.write(st.session_state['token'])
-            
+
+    logger.debug("Present Authnyc form - state...{}", st.session_state)
+
 
 def oidc_discovery_form_clicked():
     valid = oidc.validate_oidc_discovery_form()
@@ -84,7 +91,7 @@ def oidc_discovery_form_clicked():
         if 'oidc_discovery_form_submitted' not in st.session_state:
             st.session_state['oidc_discovery_form_submitted'] = True
 
-    logger.debug("OIDC Discovery form state...{}", st.session_state)
+    #logger.debug("OIDC Discovery form state...{}", st.session_state)
 
 
 def oidc_api_form_clicked():
@@ -93,4 +100,4 @@ def oidc_api_form_clicked():
         if 'oidc_api_form_submitted' not in st.session_state:
             st.session_state['oidc_api_form_submitted'] = True
 
-    logger.debug("OIDC API form state...{}", st.session_state)
+    #logger.debug("OIDC API form state...{}", st.session_state)

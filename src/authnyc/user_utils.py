@@ -21,7 +21,6 @@ import os
 import uuid
 import streamlit as st
 
-from auth_utils import initialize_auth0_api_authenticator
 from tinydb import TinyDB, Query
 from loguru import logger
 
@@ -83,57 +82,12 @@ def adduser(id_token):
     else:
         raise RuntimeError("Missing required attribute email.")
         
-def login():
-    if 'authenticator' in st.session_state:
-        authenticator = st.session_state['authenticator']
-        redirect_uri = st.session_state['redirect_uri']
 
-        if 'token' not in st.session_state:
-            result = authenticator.authorize_button(
-                name='Log in with Auth0',
-                icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
-                redirect_uri=redirect_uri,
-                scope="openid email profile",
-                key='auth0_login_btn',
-                extras_params={"prompt": "consent", "access_type": "offline"}
-            )
-
-            if result and 'token' in result:
-                logger.debug("Authentication result...{}", result)
-                #token = result['token']['access_token']
-                token = result['token']
-
-                # Verify JWT
-                # Algorithm provided in header throws "InvalidAlgorithmError"
-                #token_header_data = jwt.get_unverified_header(token)
-                #logger.debug("Token header data...{}", token_header_data)
-
-                #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
-                #           algorithms=["RS256", ])
-                
-                st.session_state['token'] = token
-                verify_authentication()
-                st.rerun()
-    
-
-def verify_authentication():
-    if 'token' in st.session_state:       
-        id_token = st.session_state.token['id_token']  
-        user_record = adduser(id_token)
-
-        if 'user_record' not in st.session_state:
-            st.session_state.user_record = user_record
-
-        if 'authenticated' not in st.session_state:
-            st.session_state.authenticated = True
-
-
-def update_auth0_user(updated_user_record):
-    auth0_mgmt_api = initialize_auth0_api_authenticator()
+def update_auth0_user(updated_user_record, auth0_mgmt_api):
     id = updated_user_record['sub']
     del updated_user_record['sub']
     result = auth0_mgmt_api.users.update(id, updated_user_record)
-    logger.debug(result)
+    logger.debug("Updated Auth0 user result...{}", result)
 
 
 def get_payload_data(payload):

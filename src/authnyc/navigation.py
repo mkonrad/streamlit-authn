@@ -18,11 +18,9 @@
 
 import streamlit as st
 
-from flask import redirect
+from auth_utils import login, logout
 from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit.source_util import get_pages
-from urllib.parse import quote_plus, urlencode
-from user_utils import login
 from loguru import logger
 
 def get_current_page_name():
@@ -44,9 +42,9 @@ def make_sidebar():
         login()
 
         if st.session_state.get("authenticated", False):
-            logger.debug("Authenticated user in session state...{}", st.session_state.user_record)
+            logger.debug("Authenticated user in session state...{}", st.session_state['user_record'])
             st.page_link("authnyc.py", label = "Home", icon=":material/home:")
-            st.page_link("pages/my_profile.py", label = "My Profile", 
+            st.page_link("pages/myprofile.py", label = "My Profile", 
                          icon=":material/manage_accounts:")
             st.button(":arrow_right: Log out", on_click=logout_button_clicked)
 
@@ -55,32 +53,5 @@ def make_sidebar():
 
 
 def logout_button_clicked():
-    st.session_state.logout = True
+    st.session_state['logout'] = True
     logout()
-        
-
-def logout():
-    if st.session_state.config:
-        config = st.session_state.config
-        LOGOUT_URL = config['LOGOUT_URL']
-        CLIENT_ID = config['CLIENT_ID']
-        REDIRECT_URI = config['REDIRECT_URI']
-        
-    if st.session_state.token:
-        ID_TOKEN = st.session_state.token['id_token']
-    if st.session_state.logout:
-        del st.session_state.authenticator
-        del st.session_state.user_record
-        del st.session_state.authenticated
-        del st.session_state.token
-
-        logger.info("Calling redirect...{}", LOGOUT_URL)
-        return redirect(LOGOUT_URL + "?" + urlencode(
-            {
-                "returnTo": REDIRECT_URI,
-                "client_id": CLIENT_ID,
-                "id_token_hint": ID_TOKEN
-            },
-            quote_via=quote_plus,
-            )
-        )

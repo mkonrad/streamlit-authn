@@ -41,6 +41,11 @@ def get_oidc_provider_config():
     return lookup_provider(provider_key)
 
 
+def get_oidc_api_provider_config():
+    provider_key = st.session_state['oidc_api_provider_key']
+    return lookup_provider(provider_key)
+
+
 def validate_oidc_discovery_form():
     if 'Select' in st.session_state['selected_oidc_provider']:
         if not st.session_state['oidc_discovery_url'] or \
