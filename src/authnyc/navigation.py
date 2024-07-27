@@ -41,7 +41,8 @@ def make_sidebar():
 
         login()
 
-        if st.session_state.get("authenticated", False):
+        if 'authenticated' in st.session_state and \
+            st.session_state['authenticated']:
             logger.debug("Authenticated user in session state...{}", st.session_state['user_record'])
             st.page_link("authnyc.py", label = "Home", icon=":material/home:")
             st.page_link("pages/myprofile.py", label = "My Profile", 

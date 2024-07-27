@@ -14,7 +14,7 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-
+import oidc_utils as oidc
 import os
 import streamlit as st
 import streamlit_authenticator as stauth
@@ -61,7 +61,9 @@ def confirm_creds(authenticator):
         st.warning('Please enter your username and password')
 
 
-def initialize_token_authenticator(oidc_config):
+@st.cache_resource
+def get_token_authenticator():
+    oidc_config = oidc.get_oidc_provider_config()
     logger.debug("Initialize token oidc provider...{}", oidc_config)
 
     provider = oidc_config['config']['provider']
@@ -70,18 +72,17 @@ def initialize_token_authenticator(oidc_config):
     if 'oidc_client_id' not in st.session_state:
         st.session_state['oidc_client_id'] = client['client_id']
 
+    if 'redirect_uri' not in st.session_state:
+        st.session_state['redirect_uri'] = client['redirect_uri']
+
     if 'logout_endpoint' not in st.session_state:
         st.session_state['logout_endpoint'] = provider['end_session_endpoint']
 
-    authenticator = OAuth2Component(client['client_id'], 
-                                    client['client_secret'], 
-                                    provider['authorization_endpoint'],
-                                    provider['token_endpoint'],
-                                    provider['token_endpoint'],
-                                    provider['revocation_endpoint'])
-    
-    
-    st.session_state['authenticator'] = authenticator
+    return OAuth2Component(client['client_id'], client['client_secret'], 
+                           provider['authorization_endpoint'],
+                           provider['token_endpoint'],
+                           provider['token_endpoint'],
+                           provider['revocation_endpoint'])
  
 
 def initialize_auth0_api_authenticator(api_config):
@@ -102,37 +103,37 @@ def initialize_auth0_api_authenticator(api_config):
 
 
 def login():
-    if 'authenticator' in st.session_state:
-        logger.debug("Login state...{}", st.session_state)
-        authenticator = st.session_state['authenticator']
-        redirect_uri = st.session_state['redirect_uri']
+    authenticator = get_token_authenticator()
+    logger.debug("Login state...{}", st.session_state)
+    #authenticator = st.session_state['authenticator']
+    redirect_uri = st.session_state['redirect_uri']
 
-        if 'token' not in st.session_state:
-            result = authenticator.authorize_button(
-                name='Log in with Auth0',
-                icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
-                redirect_uri=redirect_uri,
-                scope="openid email profile",
-                key='auth0_login_btn',
-                extras_params={"prompt": "consent", "access_type": "offline"}
-            )
+    if 'token' not in st.session_state:
+        result = authenticator.authorize_button(
+            name='Log in with Auth0',
+            icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
+            redirect_uri=redirect_uri,
+            scope="openid email profile",
+            key='auth0_login_btn',
+            extras_params={"prompt": "consent", "access_type": "offline"}
+        )
 
-            if result and 'token' in result:
-                logger.debug("Authentication result...{}", result)
-                #token = result['token']['access_token']
-                token = result['token']
+        if result and 'token' in result:
+            logger.debug("Authentication result...{}", result)
+            #token = result['token']['access_token']
+            token = result['token']
 
-                # Verify JWT
-                # Algorithm provided in header throws "InvalidAlgorithmError"
-                #token_header_data = jwt.get_unverified_header(token)
-                #logger.debug("Token header data...{}", token_header_data)
+            # Verify JWT
+            # Algorithm provided in header throws "InvalidAlgorithmError"
+            #token_header_data = jwt.get_unverified_header(token)
+            #logger.debug("Token header data...{}", token_header_data)
 
-                #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
-                #           algorithms=["RS256", ])
-                
-                st.session_state['token'] = token
-                verify_authentication()
-                st.rerun()
+            #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
+            #           algorithms=["RS256", ])
+            
+            st.session_state['token'] = token
+            verify_authentication()
+            #st.rerun()
 
 
 def logout():
@@ -143,11 +144,10 @@ def logout():
     if st.session_state['token']:
         id_token = st.session_state['token']['id_token']
     if st.session_state['logout']:
-        del st.session_state['authenticator']
         del st.session_state['user_record']
-        del st.session_state['authenticated']
         del st.session_state['token']
         del st.session_state['logout']
+        del st.session_state['authenticated']
 
         logger.info("Calling redirect...{}", logout_endpoint)
         return redirect(logout_endpoint + "?" + urlencode(

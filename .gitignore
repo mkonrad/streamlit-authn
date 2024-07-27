@@ -2,8 +2,7 @@
 .DS_Store
 
 # Authnyc Specific
-user_store.*
-oidc_store.*
+*_store.json
 *.log
 
 # Byte-compiled / optimized / DLL files

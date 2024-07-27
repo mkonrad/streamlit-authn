@@ -1,15 +1,10 @@
 [config]
 oidc_provider_configured = true
 
-[initialized]
-oidc_provider_key = "auth0"
-oidc_api_provider_key = "auth0_api"
-redirect_uri = "http://localhost:8501"
-
 [oidc_providers]
-"Select a provider" = "select_provider"
-"Auth0" = "auth0"
+'Select a provider' = 'select_provider'
+'Auth0' = 'auth0'
 
 [oidc_api_providers]
-"Select a resource" = "select_resource"
-"Auth0 API" = "auth0_api"
+'Select a resource' = 'select_resource'
+'Auth0 API' = 'auth0_api'     

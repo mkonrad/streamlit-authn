@@ -14,15 +14,20 @@
 # limitations under the License.
 # Date: 2024-06-19
 
+import date_utils as du
 import os
 import streamlit as st
+import sys
 import tomlkit
+import uuid
 
 from dotenv import dotenv_values
 from loguru import logger
+from tinydb import TinyDB, Query
 
 
 config_file = r'authnyc.toml'
+config_store = r'config_store.json'
 
 def initialize():
     initialize_logger()
@@ -52,19 +57,71 @@ def get_app_configuration():
 
     return authnyc
 
+
+@st.cache_resource
+def get_config_store():
+    config_store_path = os.path.join(os.getcwd(), config_store)
+
+    db = TinyDB(config_store_path)
+
+    return db
+
+
+def store_configuration():
+    config_store = get_config_store()
+
+    logger.debug("Store configuration - state...{}", st.session_state)
+
+    id = str(uuid.uuid4())
+    date_format = '%Y-%d-%m %H:%M:%S'
+    inserted_at = du.convert_date(format=date_format)
+
+    config = {}
+    config['name'] = 'authnyc'
+    config['id'] = id
+    config['inserted_at'] = inserted_at
+    config['updated_at'] = inserted_at
+    config['oidc_provider_configured'] = \
+        st.session_state['oidc_provider_configured']
+    config['oidc_provider_key'] = st.session_state['oidc_provider_key']
+    config['oidc_api_provider_key'] = st.session_state['oidc_api_provider_key']
+    config['redirect_uri'] = st.session_state['redirect_uri']
+
+    config_store.insert(config)
+
+
+def find_configuration():
+    config_store = get_config_store()
+
+    Config = Query()
+    config_record = config_store.search(Config.name == 'authnyc')
+    if config_record == []:
+        logger.info("Application configuration not found.")
+        return None
+    else:
+        config_record = dict(config_record[0])
+
+    return config_record
+
+
+@st.cache_resource
 def set_state():
-    authnyc = get_app_configuration()
-
-    config = authnyc['initialized']
-
-    if 'oidc_provider_key' not in st.session_state:
-        st.session_state['oidc_provider_key'] = config['oidc_provider_key']
-    if 'oidc_api_provider_key' not in st.session_state:
-        st.session_state['oidc_api_provider_key'] = \
-            config['oidc_api_provider_key']
-    if 'redirect_uri' not in st.session_state:
-        st.session_state['redirect_uri'] = \
-            config['redirect_uri']
+    config = find_configuration()
+    if config is None:
+        logger.error("Application configuration not found.")
+        sys.exit(1)
+    else:
+        if 'oidc_provider_configured' not in st.session_state:
+            st.session_state['oidc_provider_configured'] = \
+                config['oidc_provider_configured']
+        if 'oidc_provider_key' not in st.session_state:
+            st.session_state['oidc_provider_key'] = config['oidc_provider_key']
+        if 'oidc_api_provider_key' not in st.session_state:
+            st.session_state['oidc_api_provider_key'] = \
+                config['oidc_api_provider_key']
+        if 'redirect_uri' not in st.session_state:
+            st.session_state['redirect_uri'] = \
+                config['redirect_uri']
         
     logger.debug("Set state - session state...{}", st.session_state)
         
@@ -80,19 +137,15 @@ def update_app_configuration():
     config_path = os.path.join(app_path(), config_file)
     with open(config_path, "r+") as f:
         authnyc = tomlkit.load(f)
-        logger.debug("Update app configuration settings...{}", authnyc)
-        logger.debug("Update app configuration state...{}", st.session_state)
+        logger.debug("Update app configuration - settings...{}", authnyc)
+        logger.debug("Update app configuration - state...{}", st.session_state)
         f.seek(0)
         authnyc['config']['oidc_provider_configured'] =  \
             st.session_state['oidc_provider_configured']
-        
-        authnyc['initialized']['oidc_provider_key'] = \
-            st.session_state['oidc_provider_key']
-        authnyc['initialized']['oidc_api_provider_key'] = \
-            st.session_state['oidc_api_provider_key']
-        authnyc['initialized']['redirect_uri'] = st.session_state['redirect_uri']
 
         tomlkit.dump(authnyc, f)
+
+    store_configuration()
         
 
 def initialize_oidc_providers(oidc_providers):
