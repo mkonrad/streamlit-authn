@@ -26,31 +26,20 @@ from loguru import logger
 from tinydb import TinyDB, Query
 
 
-config_file = r'authnyc.toml'
-config_store = r'config_store.json'
-
 def initialize():
+    logger.info("Initializing application...")
     initialize_logger()
-
-    if is_configured():
-        set_state()
-    else:
-        prep_state()
 
 
 def is_configured():
-    authnyc = get_app_configuration()
-
+    authnyc = get_base_configuration()
     config = authnyc['config']
-
-    if 'oidc_provider_configured' not in st.session_state:
-        st.session_state['oidc_provider_configured'] = \
-            config['oidc_provider_configured']
-
+  
     return config['oidc_provider_configured']
 
 
-def get_app_configuration():
+def get_base_configuration():
+    config_file = r'authnyc.toml'
     config_path = os.path.join(app_path(), config_file)
     with open(config_path, "rb") as f:
         authnyc = tomlkit.load(f)
@@ -58,19 +47,55 @@ def get_app_configuration():
     return authnyc
 
 
+def update_base_configuration():
+    config_file = r'authnyc.toml'
+    config_path = os.path.join(app_path(), config_file)
+    with open(config_path, "r+") as f:
+        authnyc = tomlkit.load(f)
+        #logger.debug("Update app configuration - settings...{}", authnyc)
+        #logger.debug("Update app configuration - state...{}", st.session_state)
+        f.seek(0)
+        authnyc['config']['oidc_provider_configured'] =  \
+            st.session_state['oidc_provider_configured']
+
+        tomlkit.dump(authnyc, f)
+
+
+def find_configuration():
+    config_db = get_config_db()
+
+    Config = Query()
+    config_record = config_db.search(Config.name == 'authnyc')
+    if config_record == []:
+        return None
+    else:
+        config_record = dict(config_record[0])
+
+    return config_record
+
+
 @st.cache_resource
-def get_config_store():
-    config_store_path = os.path.join(os.getcwd(), config_store)
+def get_configuration():
+    config = find_configuration()
+    if config is None:
+        logger.error("Application configuration not found.")
+        sys.exit(1)
+
+    return config
+
+
+@st.cache_resource
+def get_config_db():
+    config_db_file = r'config_db.json'
+    config_store_path = os.path.join(os.getcwd(), config_db_file)
 
     db = TinyDB(config_store_path)
 
     return db
 
 
-def store_configuration():
-    config_store = get_config_store()
-
-    logger.debug("Store configuration - state...{}", st.session_state)
+def save_configuration():
+    config_db = get_config_db()
 
     id = str(uuid.uuid4())
     date_format = '%Y-%d-%m %H:%M:%S'
@@ -83,25 +108,59 @@ def store_configuration():
     config['updated_at'] = inserted_at
     config['oidc_provider_configured'] = \
         st.session_state['oidc_provider_configured']
+    config['oidc_client_id'] = st.session_state['client_id']
     config['oidc_provider_key'] = st.session_state['oidc_provider_key']
     config['oidc_api_provider_key'] = st.session_state['oidc_api_provider_key']
     config['redirect_uri'] = st.session_state['redirect_uri']
+    config['logout_endpoint'] = st.session_state['logout_endpoint']
 
-    config_store.insert(config)
+    config_db.insert(config)
 
 
-def find_configuration():
-    config_store = get_config_store()
+@st.cache_resource
+def get_oidc_providers():
+    authnyc = get_base_configuration()
 
-    Config = Query()
-    config_record = config_store.search(Config.name == 'authnyc')
-    if config_record == []:
-        logger.info("Application configuration not found.")
-        return None
-    else:
-        config_record = dict(config_record[0])
+    oidc_providers = authnyc['oidc_providers'].unwrap()
 
-    return config_record
+    return oidc_providers
+
+
+@st.cache_resource
+def get_oidc_api_providers():
+    authnyc = get_base_configuration()
+
+    oidc_api_providers = authnyc['oidc_api_providers'].unwrap()
+
+    return oidc_api_providers
+    
+def prep_state():
+    authnyc = get_base_configuration()
+
+    initialize_oidc_providers(authnyc['oidc_providers'].unwrap())
+    initialize_oidc_api_providers(authnyc['oidc_api_providers'].unwrap())
+              
+
+def initialize_oidc_providers(oidc_providers):
+    #logger.debug("Initialization OIDC providers...{}", oidc_providers)
+    oidc_provider_names = list(oidc_providers.keys())
+
+    if 'oidc_provider_list' not in st.session_state:
+        st.session_state['oidc_provider_list'] = oidc_provider_names
+
+    if 'oidc_providers' not in st.session_state:
+        st.session_state['oidc_providers'] = oidc_providers
+        
+
+def initialize_oidc_api_providers(oidc_api_providers):
+    #logger.debug("Initialization OIDC API providers...{}", oidc_api_providers)
+    oidc_api_provider_names = list(oidc_api_providers.keys())
+
+    if 'oidc_api_provider_list' not in st.session_state:
+        st.session_state['oidc_api_provider_list'] = oidc_api_provider_names
+
+    if 'oidc_api_providers' not in st.session_state:
+        st.session_state['oidc_api_providers'] = oidc_api_providers
 
 
 @st.cache_resource
@@ -124,50 +183,6 @@ def set_state():
                 config['redirect_uri']
         
     logger.debug("Set state - session state...{}", st.session_state)
-        
-    
-def prep_state():
-    authnyc = get_app_configuration()
-
-    initialize_oidc_providers(authnyc['oidc_providers'].unwrap())
-    initialize_oidc_api_providers(authnyc['oidc_api_providers'].unwrap())
-        
-
-def update_app_configuration():
-    config_path = os.path.join(app_path(), config_file)
-    with open(config_path, "r+") as f:
-        authnyc = tomlkit.load(f)
-        logger.debug("Update app configuration - settings...{}", authnyc)
-        logger.debug("Update app configuration - state...{}", st.session_state)
-        f.seek(0)
-        authnyc['config']['oidc_provider_configured'] =  \
-            st.session_state['oidc_provider_configured']
-
-        tomlkit.dump(authnyc, f)
-
-    store_configuration()
-        
-
-def initialize_oidc_providers(oidc_providers):
-    #logger.debug("Initialization OIDC providers...{}", oidc_providers)
-    oidc_provider_names = list(oidc_providers.keys())
-
-    if 'oidc_provider_list' not in st.session_state:
-        st.session_state['oidc_provider_list'] = oidc_provider_names
-
-    if 'oidc_providers' not in st.session_state:
-        st.session_state['oidc_providers'] = oidc_providers
-        
-
-def initialize_oidc_api_providers(oidc_api_providers):
-    #logger.debug("Initialization OIDC API providers...{}", oidc_api_providers)
-    oidc_api_provider_names = list(oidc_api_providers.keys())
-
-    if 'oidc_api_provider_list' not in st.session_state:
-        st.session_state['oidc_api_provider_list'] = oidc_api_provider_names
-
-    if 'oidc_api_providers' not in st.session_state:
-        st.session_state['oidc_api_providers'] = oidc_api_providers
 
 
 def initialize_env():

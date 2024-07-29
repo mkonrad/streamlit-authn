@@ -20,9 +20,10 @@ import streamlit as st
 from loguru import logger
 
 
+# Workflow form for capturing OIDC Provider details
 def present_oidc_discovery_form():
     with st.form(key='oidc_discovery_form'):
-        st.selectbox('OIDC Provider', st.session_state['oidc_provider_list'], 
+        st.selectbox('OIDC Provider', oidc.get_oidc_provider_names(), 
                      index = 0, key='selected_oidc_provider')
         st.text_input(label="Enter OIDC Discovery URL",
                       max_chars=128, key='oidc_discovery_url',
@@ -43,10 +44,11 @@ def present_oidc_discovery_form():
                               on_click=oidc_discovery_form_clicked)
 
 
+# Workflow form for capturing OIDC API Provider details
 def present_oidc_api_form():
     del st.session_state['oidc_discovery_form_submitted']
     with st.form(key='oidc_api_form'):
-        st.selectbox('OIDC API', st.session_state['oidc_api_provider_list'], 
+        st.selectbox('OIDC API', oidc.get_oidc_api_provider_names(), 
                         index = 0, key='selected_oidc_api_provider')
         st.text_input(label="API Domain", max_chars=128, 
                         key='api_domain',
@@ -64,13 +66,10 @@ def present_oidc_api_form():
         st.form_submit_button("Next", on_click=oidc_api_form_clicked)
 
 
-def present_authnyc_form():
-    if 'oidc_api_form_submitted' in st.session_state:
-        del st.session_state['oidc_api_form_submitted']
-
-    #if is_configured:
-    #    oidc_config = oidc.get_oidc_provider_config()
-    #    initialize_token_authenticator(oidc_config)
+# Authnyc Main page
+def present_authnyc():
+    #if 'oidc_api_form_submitted' in st.session_state:
+    #    del st.session_state['oidc_api_form_submitted']
 
     if 'authenticated' not in st.session_state:
         st.write("Please log in!")

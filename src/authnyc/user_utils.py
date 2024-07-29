@@ -26,11 +26,11 @@ from loguru import logger
 
 
 @st.cache_resource
-def get_user_store():
-    user_store_filename = r'user_store.json'
-    user_store_path = os.path.join(os.getcwd(), user_store_filename)
+def get_user_db():
+    user_db_file = r'user_db.json'
+    user_db_path = os.path.join(os.getcwd(), user_db_file)
 
-    db = TinyDB(user_store_path)
+    db = TinyDB(user_db_path)
 
     return db
 
@@ -38,10 +38,10 @@ def get_user_store():
 def finduser(email):
     logger.debug("Searching for user...{}", email)
 
-    user_store = get_user_store()
+    user_db = get_user_db()
 
     User = Query()
-    user_record = user_store.search(User.email == email)
+    user_record = user_db.search(User.email == email)
     if user_record == []:
         logger.info("User not found, search result...{}", user_record)
         user_record = None
@@ -71,8 +71,8 @@ def adduser(id_token):
             user_record['updated_at'] = inserted_at
         
             logger.debug("Adding user to user store...{}", user_record)
-            user_store = get_user_store()
-            user_store.insert(user_record)
+            user_db = get_user_db()
+            user_db.insert(user_record)
         else:
             # Update existing record with any changes from OIDC
             user_record = update_local_user_record(user_record, found_record)
@@ -134,7 +134,7 @@ def get_payload_data(payload):
 
 
 def update_local_user_record(user_record, found_record):
-    user_store = get_user_store()
+    user_db = get_user_db()
     
     email = found_record['email']
     id = found_record['id']
@@ -148,6 +148,6 @@ def update_local_user_record(user_record, found_record):
     user_record['updated_at'] = updated_at
 
     User = Query()
-    user_store.update(user_record, User.email == email)
-    logger.debug("User store updated...{}", user_store.all())
+    user_db.update(user_record, User.email == email)
+    #logger.debug("User store updated...{}", user_db.all())
     return user_record

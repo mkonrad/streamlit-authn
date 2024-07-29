@@ -7,4 +7,4 @@ oidc_provider_configured = true
 
 [oidc_api_providers]
 'Select a resource' = 'select_resource'
-'Auth0 API' = 'auth0_api'     
+'Auth0 API' = 'auth0_api'           

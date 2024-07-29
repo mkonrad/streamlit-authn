@@ -17,7 +17,7 @@
 import authnyc_form as af
 import streamlit as st
 
-from common_utils import initialize, is_configured, update_app_configuration
+from common_utils import initialize, is_configured
 from loguru import logger
 from navigation import make_sidebar
 
@@ -26,21 +26,15 @@ def main():
     
     st.header('Welcome to Auth:red[n]:orange[y]:blue[c]!')
     if is_configured():
-        af.present_authnyc_form()
+        af.present_authnyc()
     else:
-        if not st.session_state['oidc_provider_configured']:
-            if 'oidc_discovery_form_submitted' not in st.session_state:
-                #logger.debug("Initial OIDC provider state...{}", st.session_state)
-                af.present_oidc_discovery_form()
+        if 'oidc_discovery_form_submitted' not in st.session_state:
+            #logger.debug("Initial OIDC provider state...{}", st.session_state)
+            af.present_oidc_discovery_form()
         if 'oidc_discovery_form_submitted' in st.session_state and \
             st.session_state['oidc_discovery_form_submitted'] == True:
             #logger.debug("OIDC provider form submitted - state...{}", st.session_state)
             af.present_oidc_api_form()
-        if 'oidc_api_form_submitted' in st.session_state and \
-            st.session_state['oidc_api_form_submitted'] == True:
-            #logger.debug("OIDC api form submitted state...{}", st.session_state)
-            update_app_configuration()
-            af.present_authnyc_form()
 
 
 if __name__ == "__main__":

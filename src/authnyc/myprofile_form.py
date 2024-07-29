@@ -14,10 +14,9 @@
 # limitations under the License.
 # Date: 2024-06-19
 
-import oidc_utils as oidc
 import streamlit as st
 
-from auth_utils import initialize_auth0_api_authenticator
+from auth_utils import get_auth0_api_authenticator
 from user_utils import update_auth0_user
 from loguru import logger
 
@@ -70,8 +69,7 @@ def profile_form_button_clicked():
         updated_user_record = compare_user_record(user_record_keys)
 
         if updated_user_record is not None:
-            api_config = oidc.get_oidc_api_provider_config()
-            auth0_mgmt_api = initialize_auth0_api_authenticator(api_config)
+            auth0_mgmt_api = get_auth0_api_authenticator()
             update_auth0_user(updated_user_record, auth0_mgmt_api)
 
 

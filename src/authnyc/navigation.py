@@ -23,6 +23,7 @@ from streamlit.runtime.scriptrunner import get_script_run_ctx
 from streamlit.source_util import get_pages
 from loguru import logger
 
+
 def get_current_page_name():
     ctx = get_script_run_ctx()
     if ctx is None:
@@ -43,7 +44,7 @@ def make_sidebar():
 
         if 'authenticated' in st.session_state and \
             st.session_state['authenticated']:
-            logger.debug("Authenticated user in session state...{}", st.session_state['user_record'])
+            #logger.debug("Authenticated user in session state...{}", st.session_state['user_record'])
             st.page_link("authnyc.py", label = "Home", icon=":material/home:")
             st.page_link("pages/myprofile.py", label = "My Profile", 
                          icon=":material/manage_accounts:")
