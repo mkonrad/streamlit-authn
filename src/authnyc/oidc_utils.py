@@ -29,8 +29,8 @@ from tinydb import TinyDB, Query
 
 @st.cache_resource
 def get_oidc_db():
-    oidc_db_filename = r'oidc_db.json'
-    oidc_db_path = os.path.join(os.getcwd(), oidc_db_filename)
+    oidc_db_file = r'oidc_db.json'
+    oidc_db_path = os.path.join(os.getcwd(), oidc_db_file)
 
     db = TinyDB(oidc_db_path)
 

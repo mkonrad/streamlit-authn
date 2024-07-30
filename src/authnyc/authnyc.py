@@ -38,6 +38,6 @@ def main():
 
 
 if __name__ == "__main__":
-    initialize()
+    initialize(log_level='INFO')
         
     main()

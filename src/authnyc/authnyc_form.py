@@ -25,7 +25,7 @@ def present_oidc_discovery_form():
     with st.form(key='oidc_discovery_form'):
         st.selectbox('OIDC Provider', oidc.get_oidc_provider_names(), 
                      index = 0, key='selected_oidc_provider')
-        st.text_input(label="Enter OIDC Discovery URL",
+        st.text_input(label="OIDC Discovery URL",
                       max_chars=128, key='oidc_discovery_url',
                       placeholder="https://oidc.provider.domain/.well-known/openid-configuration")
         st.text_input(label="Client ID",
@@ -35,7 +35,7 @@ def present_oidc_discovery_form():
                       max_chars=128, key='oidc_client_secret',
                       type='password',
                       placeholder="***...***")
-        st.text_input(label="Enter Redirect URI",
+        st.text_input(label="Redirect URI",
                       max_chars=128, key='oidc_redirect_uri',
                       placeholder="http://localhost:8501",
                       value="http://localhost:8501")
@@ -79,8 +79,6 @@ def present_authnyc():
         st.write('Bringing some :sun_with_face:')
         st.write(st.session_state['token'])
 
-    logger.debug("Present Authnyc form - state...{}", st.session_state)
-
 
 def oidc_discovery_form_clicked():
     valid = oidc.validate_oidc_discovery_form()
@@ -88,13 +86,9 @@ def oidc_discovery_form_clicked():
         if 'oidc_discovery_form_submitted' not in st.session_state:
             st.session_state['oidc_discovery_form_submitted'] = True
 
-    #logger.debug("OIDC Discovery form - state...{}", st.session_state)
-
 
 def oidc_api_form_clicked():
     valid = oidc.validate_oidc_api_form()
     if valid:
         if 'oidc_api_form_submitted' not in st.session_state:
             st.session_state['oidc_api_form_submitted'] = True
-
-    #logger.debug("OIDC API form - state...{}", st.session_state)

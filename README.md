@@ -1,5 +1,11 @@
 # Authnyc! - A Streamlit Authentication Demonstration Application
 
+Authnyc! is a OpenID Connect client demonstration application. 
+
+Authnyc! has been tested with and currently only has pre-programmed support 
+for integrating with Auth0 as a provider. 
+
+
 
 ## OS Prerequisites
 
@@ -10,24 +16,16 @@ Python 3.12.4
 ## Application Prerequisites
 
 
-### OAuth 2 Authentication
+### Auth0 Tenant Requirements
 
 
-Based on:
-https://github.com/dnplus/streamlit-oauth
-
-
-This configuration requires an OAuth 2 service provider. This setup will 
-cover the use of Auth0. Visit `https://auth0.com` to create an account. 
-
-
-### Create Auth0 Application
+#### Create an Application
 
 
 1. Login to the Auth0 Dashboard
 2. Select Applications > Applications
 3. Select `+ Create Application`
-  a. Name: streamlit-app
+  a. Name: SampleApp
   b. Choose an application type: Regular Web Applications
   c. Select Create
 4. Select Python for `What technology are you using for your project?`
@@ -40,93 +38,7 @@ cover the use of Auth0. Visit `https://auth0.com` to create an account.
 8. Select Save Changes
 
 
-The following information will be used to create the .env file for 
-instantiating OAuth 2. 
-
-From `Settings` copy these fields to the environment file:
-
-- CLIENT_ID
-- CLIENT_SECRET
-
-On the `Settings` page scroll to the bottom and select Advanced Settings > 
-Endpoints
-
-Use these properties to populate these fields in the environment file:
-
-- AUTHORIZE_URL
-- TOKEN_URL
-- REFRESH_TOKEN_URL
-- REVOKE_TOKEN_URL
-
-
-### Create Environment File
-
-
-Create the environment file to store OAuth 2 settings:
-
-
-Edit 
-
-    src/app/.env
-
-`
-AUTHORIZE_URL=https://<auth0_domain_url>/authorize
-TOKEN_URL=https://<auth0_domain_url>/oauth/token
-REFRESH_TOKEN_URL=https://<auth0_domain_url>/oauth/token
-REVOKE_TOKEN_URL=https://<auth0_domain_url>/oauth/revoke
-CLIENT_ID=<AUTH0_CLIENT_ID>
-CLIENT_SECRET=<AUTH0_CLIENT_SECRET>
-LOGOUT_URL=https://<auth0_domain_url>/v2/logout
-REDIRECT_URI=http(s)://<app_fqdn:port>
-EDIT_PROFILE=True
-`
-
-
-## Running Authnyc!
-
-
-First time run; create a python virtual environment in the root directory of 
-Authnyc!.
-
-See the `Historical Documentation` section for details on the virtual 
-environment.
-
-
-### Install Dependencies (One Time Setup)
-
-1. Activate Virtual Environment
-
-Windows:
-
-    .\venv\Scripts\Activate.ps1
-
-
-macOS:
-
-    . ./venv/bin/activate
-
-
-2. Install Dependencies
-
-    pip install -r requirements.txt
-
-
-3. Run the following command to start Authnyc!:
-
-    streamlit run ./src/authnyc/authnyc.py
-
-
-## Authnyc User Profile
-
-
-User profile support has been added to Authnyc!. 
-
-To support editing `My Profile`, a Machine to Machine application needs to be 
-configured in Auth0 and a .apienv file is added to Authnyc in the 
-`src/authnyc` directory. 
-
-
-### Create Auth0 Machine to Machine Application
+#### Create a Machine to Machine Application
 
  
 1. Login to Auth0 Dashboard 
@@ -146,21 +58,54 @@ configured in Auth0 and a .apienv file is added to Authnyc in the
 9. Select Authorize 
 
 
-### Update API (Machine to Machine) Environment File
+## Running Authnyc!
 
 
-Update the .apienv file as per your Auth0 Machine to Machine configuration:
+1. Set up Python Virtual Environment (one time step) 
 
-`
-API_DOMAIN=<your_auth0_api_domain>
-API_CLIENT_ID=<your_auth0_api_client_id>
-API_CLIENT_SECRET=<your_auth0_api_client_secret>
-API_AUDIENCE=https://<your_auth0_api_domain>/api/v2/
-`
 
-After updating the .env and .apienv files uncomment these settings in the 
-`.gitignore` file so your secrets are not copied to version control. 
-    
+Windows:
+
+    py -m venv .\venv
+
+
+macOS: 
+
+    python3 -m venv ./venv
+
+
+2. Activate Virtual Environment
+
+Windows:
+
+    .\venv\Scripts\Activate.ps1
+
+
+macOS:
+
+    . ./venv/bin/activate
+
+
+3. Install Dependencies (One time step)
+
+    pip install --upgrade pip
+    pip install -r requirements.txt
+
+
+4. Run Authnyc!:
+
+    streamlit run ./src/authnyc/authnyc.py
+
+
+When starting Authnyc! for the first time, a couple of forms will collect 
+the required provider information which will be used to automatically configure 
+the OIDC client. 
+
+
+To clear the configuration and start over, edit the authnyc.toml file and 
+set `oidc_provider_configured = false`, remove the config_db.json, oidc_db.json, 
+and user_db.json files if they exists.
+
 
 # Historical Documentation
 ---
@@ -202,11 +147,6 @@ macOS:
 
     python.exe -m pip install --upgrade pip
 
-## Logos
-
-
-Copy application specific logos to the src/app/images directory.
-
 
 ## Set Some Streamlit Defaults
 
@@ -222,6 +162,12 @@ base="light"
 primaryColor=#0079c2
 secondaryBackgroundColor=#92d3f5
 `
+
+## OIDC Authentication
+
+
+Based on:
+https://github.com/dnplus/streamlit-oauth
 
 
 ## Basic Username/Password Authentication
@@ -292,33 +238,3 @@ preauthorized:
   emails:
   - <userid@domain.com>
 ` 
-
-
-## Update authnyc.py with Basic Authentication
-
-
-Authentication and session management is done with 2 calls to the auth_utils 
-module: 
-
-
-def main():
-    st.logo(logo)
-    st.header('Welcome to Authnyc!')
-
-    __authenticator = au.initialize_creds_authenticator()__
-    __au.confirm_creds_session(authenticator)__
-
-
-### Switching authnyc.py for OAuth 2 Initializer and Session (Default)
-
-
-Change the creds_authenticator to the token_authenticator and update 
-creds_session to token_session.
-
-
-def main():
-    st.logo(logo)
-    st.header('Welcome to Authnyc!')
-    
-    __authenticator = au.initialize_token_authenticator()__
-    __au.confirm_token_session(authenticator)__
