@@ -88,7 +88,15 @@ macOS:
 
 3. Install Dependencies (One time step)
 
+Windows:
+
+    python.exe -m pip install --upgrade pip
+
+macOS:
+
     pip install --upgrade pip
+
+Both:
     pip install -r requirements.txt
 
 
