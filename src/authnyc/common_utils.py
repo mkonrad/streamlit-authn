@@ -30,9 +30,6 @@ def initialize(log_level):
     logger.info("Initializing application...")
     initialize_logger(log_level)
 
-    #if not is_configured():
-    #    ensure_clean_start()
-
 
 def initialize_logger(level='DEBUG'):
     logname = "authnyc.log"
@@ -182,92 +179,3 @@ def get_svg_logo(logo='logo.svg'):
 def get_help_url():
     help_url='https://community.auth0.com/'
     return help_url
-
-
-# Deprecated methods
-def initialize_env():
-    initialize_logger()
-    config = initialize_config()
-    try: 
-        if validate_config(config):
-            st.session_state.config = config
-
-            # Initialize State 
-            st.session_state.logout = False
-            
-            if config['EDIT_PROFILE']:
-                api_config = initialize_api_config()
-                st.session_state.api_config = api_config
-
-    except RuntimeError as e:
-        raise e
-
-
-def initialize_config():
-    # Load environment variables from .env file
-    env_file = os.path.join(app_path(), '.env')
-
-    # Load environment to config
-    return dotenv_values(env_file)
-
-
-def initialize_api_config():
-    # Load environment variables from .env file
-    env_file = os.path.join(app_path(), '.apienv')
-
-    # Load environment to config
-    return dotenv_values(env_file)
-
-
-def validate_config(config):
-    """
-    Validates all settings have been set.
-    
-    Args:
-        config (dict): The OIDC client configuration settings specified in 
-                       .env.
-
-    Returns:
-        bool: True if all fields have set values, False otherwise.
-    """
-    if config is not None:
-        keys = list(config.keys())
-
-        try: 
-            if validate_keys_list(keys):
-                for item in config.values():
-                    if item is None:
-                        raise RuntimeError("OIDC configuration is missing or incomplete.")
-            else:
-                return False
-            return True
-        except RuntimeError as e:
-            raise e
-        
-    return False
-    
-
-def validate_keys_list(config_keys):
-    """
-    Validates the required keys are included in the configuration.
-
-    Args: keys (list): The list of keys to be validated.
-
-    Returns:
-        bool: True if the required keys are included, False otherwise.
-    """
-    oidc_required_settings_file = os.path.join(app_path(), 
-                                               r'oidc-required-settings.txt')
-    required_keys = []
-    with open(oidc_required_settings_file) as oidc:
-        for key in oidc:
-            key = key.rstrip('\n')
-            required_keys.append(key)
-
-    required_keys.sort()
-    config_keys.sort()
-
-    if config_keys == required_keys:
-        return True
-    
-    raise RuntimeError("OIDC configuration is missing or invalid.")

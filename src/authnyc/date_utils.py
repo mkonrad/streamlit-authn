@@ -28,3 +28,7 @@ def convert_date(date=datetime.now(), format='%m/%d/%Y'):
         string: the formatted date
     """
     return date.strftime(format)
+
+
+def convert_epoch(time_stamp, format='%Y-%m-%d %H:%M:%S'):
+    return datetime.strftime(datetime.fromtimestamp(time_stamp), format)

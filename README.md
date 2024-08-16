@@ -246,3 +246,6 @@ preauthorized:
   emails:
   - <userid@domain.com>
 ` 
+
+
+https://static.vecteezy.com/system/resources/previews/000/574/829/original/vector-login-sign-icon.jpg

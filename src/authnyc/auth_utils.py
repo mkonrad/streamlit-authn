@@ -14,6 +14,7 @@
 # limitations under the License.
 # Date: 2024-06-19
 
+import date_utils as du
 import oidc_utils as oidc
 import os
 import streamlit as st
@@ -120,6 +121,9 @@ def login():
                 logger.debug("Authentication result...{}", result)
                 #token = result['token']['access_token']
                 token = result['token']
+                expires_at = token['expires_at']
+                expires_cat = du.convert_epoch(expires_at)
+                logger.debug("Token expires at...{}", expires_cat)
 
                 # Verify JWT
                 # Algorithm provided in header throws "InvalidAlgorithmError"
@@ -144,10 +148,7 @@ def logout():
         if st.session_state['token']:
             id_token = st.session_state['token']['id_token']
         if st.session_state['logout']:
-            del st.session_state['user_record']
-            del st.session_state['token']
-            del st.session_state['logout']
-            del st.session_state['authenticated']
+            clear_logout_state()
 
             logger.info("Calling redirect...{}", logout_endpoint)
             return redirect(logout_endpoint + "?" + urlencode(
@@ -171,3 +172,16 @@ def verify_authentication():
 
         if 'authenticated' not in st.session_state:
             st.session_state['authenticated'] = True
+
+
+def clear_logout_state():
+    #if st.session_state['authenticator_login']:
+    #    del st.session_state['authenticator_login']
+    if st.session_state['user_record']:
+        del st.session_state['user_record']
+    if st.session_state['token']:
+        del st.session_state['token']
+    if st.session_state['logout']:
+        del st.session_state['logout']
+    if st.session_state['authenticated']:
+        del st.session_state['authenticated']
