@@ -26,7 +26,7 @@ from auth0.management import Auth0
 from common_utils import app_path, get_configuration, is_configured
 from flask import redirect
 from loguru import logger
-from streamlit_oauth import OAuth2Component
+from streamlit_oauth import OAuth2Component, StreamlitOauthError
 from urllib.parse import quote_plus, urlencode
 from user_utils import adduser
 from yaml.loader import SafeLoader
@@ -62,7 +62,6 @@ def confirm_creds(authenticator):
         st.warning('Please enter your username and password')
 
 
-@st.cache_resource
 def get_token_authenticator(provider_key):
     oidc_config = oidc.get_provider_config(provider_key)
     #logger.debug("Initialize token oidc provider...{}", oidc_config)
@@ -79,7 +78,6 @@ def get_token_authenticator(provider_key):
     return authenticator
  
 
-@st.cache_resource
 def get_auth0_api_authenticator():
     if is_configured():
         app_config = get_configuration()
@@ -108,34 +106,33 @@ def login():
         redirect_uri = app_config['redirect_uri']
 
         if 'token' not in st.session_state:
-            result = authenticator.authorize_button(
-                name='Log in with Auth0',
-                icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
-                redirect_uri=redirect_uri,
-                scope="openid email profile",
-                key='authenticator_login',
-                extras_params={"prompt": "consent", "access_type": "offline"}
-            )
+            try:
+                result = authenticator.authorize_button(
+                    name='Log in with Auth0',
+                    icon='https://cdn.auth0.com/quantum-assets/dist/latest/favicons/auth0-favicon-onlight.png',
+                    redirect_uri=redirect_uri,
+                    scope="openid email profile",
+                    key='authenticator_login',
+                    extras_params={"prompt": "consent", "access_type": "offline"}
+                )
 
-            if result and 'token' in result:
-                logger.debug("Authentication result...{}", result)
-                #token = result['token']['access_token']
-                token = result['token']
-                expires_at = token['expires_at']
-                expires_cat = du.convert_epoch(expires_at)
-                logger.debug("Token expires at...{}", expires_cat)
+                if result and 'token' in result:
+                    logger.debug("Authentication result...{}", result)
+                    token = result['token']
+                    expires_at = token['expires_at']
+                    expires_cat = du.convert_epoch(expires_at)
+                    logger.debug("Token expires at...{}", expires_cat)
 
-                # Verify JWT
-                # Algorithm provided in header throws "InvalidAlgorithmError"
-                #token_header_data = jwt.get_unverified_header(token)
-                #logger.debug("Token header data...{}", token_header_data)
+                    st.session_state['token'] = token
+                    verify_authentication()
+                    st.rerun()
 
-                #jwt.decode(jwt=token, key=config['CLIENT_SECRET'], 
-                #           algorithms=["RS256", ])
-                
-                st.session_state['token'] = token
-                verify_authentication()
-                st.rerun()
+            except StreamlitOauthError as soe:
+                #if 'authenticator_login' in st.session_state:
+                #    del st.session_state['authenticator_login']
+                logger.error("State mismatch...{}", st.session_state)
+                logger.error(soe)
+                st.write("A state mismatch error has occurred, please login.")
 
 
 def logout():
@@ -145,8 +142,10 @@ def logout():
         logout_endpoint = app_config['logout_endpoint']
         redirect_uri = app_config['redirect_uri']
             
-        if st.session_state['token']:
+        if 'token' in st.session_state and st.session_state['token']:
             id_token = st.session_state['token']['id_token']
+        else:
+            id_token = None
         if st.session_state['logout']:
             clear_logout_state()
 
@@ -163,8 +162,16 @@ def logout():
     
 
 def verify_authentication():
+    
     if 'token' in st.session_state:       
-        id_token = st.session_state.token['id_token']  
+        id_token = st.session_state.token['id_token'] 
+        # Verify JWT
+        # Algorithm provided in header throws "InvalidAlgorithmError"
+        #token_header_data = jwt.get_unverified_header(token)
+        #logger.debug("Token header data...{}", token_header_data)
+
+        #jwt.decode(jwt=id_token, key=config['CLIENT_SECRET'], 
+        #           algorithms=["RS256", ])
         user_record = adduser(id_token)
 
         if 'user_record' not in st.session_state:
@@ -172,16 +179,17 @@ def verify_authentication():
 
         if 'authenticated' not in st.session_state:
             st.session_state['authenticated'] = True
+        elif st.session_state['authenticated'] == False:
+            st.session_state['authenticated'] = True
 
 
 def clear_logout_state():
     #if st.session_state['authenticator_login']:
     #    del st.session_state['authenticator_login']
-    if st.session_state['user_record']:
+    if 'user_record' in st.session_state and st.session_state['user_record']:
         del st.session_state['user_record']
-    if st.session_state['token']:
+    if 'token' in st.session_state and st.session_state['token']:
         del st.session_state['token']
-    if st.session_state['logout']:
+    if 'logout' in st.session_state and st.session_state['logout']:
         del st.session_state['logout']
-    if st.session_state['authenticated']:
-        del st.session_state['authenticated']
+    st.session_state['authenticated'] = False

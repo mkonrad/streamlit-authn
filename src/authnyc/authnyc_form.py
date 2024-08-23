@@ -71,10 +71,12 @@ def present_authnyc():
     #if 'oidc_api_form_submitted' in st.session_state:
     #    del st.session_state['oidc_api_form_submitted']
 
-    if 'authenticated' not in st.session_state:
+    if 'authenticated' not in st.session_state or \
+        st.session_state['authenticated'] == False:
         st.write("Please log in!")
         
-    if 'authenticated' in st.session_state:
+    if 'authenticated' in st.session_state and \
+        st.session_state['authenticated'] == True:
         st.write(f'Welcome *{st.session_state['user_record']['name']}*')
         st.write('Bringing some :sun_with_face:')
         st.write(st.session_state['token'])
