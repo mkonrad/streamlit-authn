@@ -130,9 +130,9 @@ def login():
             except StreamlitOauthError as soe:
                 #if 'authenticator_login' in st.session_state:
                 #    del st.session_state['authenticator_login']
-                logger.error("State mismatch...{}", st.session_state)
+                logger.error("Streamlit oauth error...{}", st.session_state)
                 logger.error(soe)
-                st.write("A state mismatch error has occurred, please login.")
+                st.write("Sorry, your login timed out. Please login again.")
 
 
 def logout():
