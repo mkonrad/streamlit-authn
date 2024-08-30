@@ -10,7 +10,7 @@ for integrating with Auth0 as a provider.
 ## OS Prerequisites
 
 
-Python 3.12.4
+Python 3.12.x
 
 
 ## Application Prerequisites
